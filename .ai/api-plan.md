@@ -37,8 +37,8 @@
   - Errors: 401 Unauthorized, 403 Forbidden
 
 - **GET /users/{userId}**
-  - Description: Get a specific user
-  - Response: `{ "id": "uuid", "email": "string", "name": "string", "managerId": "uuid" }`
+  - Description: Get a specific user along with their subordinate users. The response includes the requested user's data and a list of subordinate users (employees for whom the user is the manager).
+  - Response: `{ "id": "uuid", "email": "string", "name": "string", "managerId": "uuid", "subordinates": [{ "id": "uuid", "email": "string", "name": "string", "managerId": "uuid" }] }`
   - Success: 200 OK
   - Errors: 401 Unauthorized, 403 Forbidden, 404 Not Found
 

@@ -39,6 +39,7 @@ export interface UserDTO {
   email: string;
   name: string;
   managerId: string | null;
+  subordinates?: UserDTO[];
 }
 
 export interface EmployeeDTO {

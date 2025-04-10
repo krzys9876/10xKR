@@ -87,6 +87,55 @@ const paginationSchema = z.object({
 
 ## 10. Przykładowa implementacja
 
+# API Endpoint Implementation Plan: GET /users/{userId}
+
+## 1. Overview
+This endpoint retrieves a specific user's profile along with a list of subordinate users (i.e., employees for whom the requested user is the manager).
+
+## 2. Request Details
+- HTTP Method: GET
+- URL Structure: /users/{userId}
+- Path Parameters:
+  - userId: The UUID of the requested user.
+- Required Headers:
+  - Authorization: Bearer {token} (JWT token obtained upon login)
+
+## 3. Authorization and Validation
+- Validate that `userId` is a valid UUID using Zod.
+- Ensure the requester is either the requested user or an administrator.
+
+## 4. Response Format
+- Success (200 OK):
+```
+{
+  "id": "uuid",
+  "email": "string",
+  "name": "string",
+  "managerId": "uuid",
+  "subordinates": [
+    {
+      "id": "uuid",
+      "email": "string",
+      "name": "string",
+      "managerId": "uuid"
+    }
+  ]
+}
+```
+- Error Responses:
+  - 400 Bad Request for invalid userId format.
+  - 401 Unauthorized if not logged in.
+  - 403 Forbidden if the requester lacks proper permissions.
+  - 404 Not Found if the user does not exist.
+
+## 5. Data Flow
+- Middleware handles authentication.
+- The `userId` parameter is validated using Zod.
+- Check if the requester is an admin or the user themselves.
+- Retrieve the main user data from the `users` table.
+- Additionally, query the `users` table to fetch subordinate users where the `managerId` matches the requested user's id.
+- Compile both sets of data into the final response.
+
 ```typescript
 // src/pages/api/users/index.ts
 import type { APIRoute } from "astro";
