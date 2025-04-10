@@ -42,13 +42,6 @@
   - Success: 200 OK
   - Errors: 401 Unauthorized, 403 Forbidden, 404 Not Found
 
-- **PUT /users/{userId}**
-  - Description: Update a user (e.g., assign manager)
-  - Request Payload: `{ "name": "string", "managerId": "uuid" }`
-  - Response: `{ "id": "uuid", "email": "string", "name": "string", "role": "string", "managerId": "uuid" }`
-  - Success: 200 OK
-  - Errors: 401 Unauthorized, 403 Forbidden, 404 Not Found, 400 Bad Request
-
 - **GET /managers/{managerId}/employees**
   - Description: Get all employees for a specific manager
   - Query Parameters: `page`, `limit`
@@ -65,25 +58,11 @@
   - Success: 200 OK
   - Errors: 401 Unauthorized
 
-- **POST /assessment-processes**
-  - Description: Create a new assessment process
-  - Request Payload: `{ "name": "string", "status": "string", "startDate": "date", "endDate": "date" }`
-  - Response: `{ "id": "uuid", "name": "string", "status": "string", "active": true, "startDate": "date", "endDate": "date" }`
-  - Success: 201 Created
-  - Errors: 401 Unauthorized, 403 Forbidden, 400 Bad Request
-
 - **GET /assessment-processes/{processId}**
   - Description: Get a specific assessment process
   - Response: `{ "id": "uuid", "name": "string", "status": "string", "active": "boolean", "startDate": "date", "endDate": "date" }`
   - Success: 200 OK
   - Errors: 401 Unauthorized, 404 Not Found
-
-- **PUT /assessment-processes/{processId}**
-  - Description: Update an assessment process
-  - Request Payload: `{ "name": "string", "status": "string", "active": "boolean", "startDate": "date", "endDate": "date" }`
-  - Response: `{ "id": "uuid", "name": "string", "status": "string", "active": "boolean", "startDate": "date", "endDate": "date" }`
-  - Success: 200 OK
-  - Errors: 401 Unauthorized, 403 Forbidden, 404 Not Found, 400 Bad Request
 
 - **GET /assessment-processes/{processId}/status-history**
   - Description: Get status history for an assessment process
@@ -149,7 +128,7 @@
 ### Self-Assessments
 
 - **POST /goals/{goalId}/self-assessment**
-  - Description: Create a self-assessment for a goal
+  - Description: Create or update a self-assessment for a goal
   - Request Payload: `{ "rating": "number", "comments": "string" }`
   - Response: `{ "id": "uuid", "rating": "number", "comments": "string", "createdAt": "datetime" }`
   - Success: 201 Created
@@ -161,17 +140,10 @@
   - Success: 200 OK
   - Errors: 401 Unauthorized, 403 Forbidden, 404 Not Found
 
-- **PUT /goals/{goalId}/self-assessment/{assessmentId}**
-  - Description: Update a self-assessment
-  - Request Payload: `{ "rating": "number", "comments": "string" }`
-  - Response: `{ "id": "uuid", "rating": "number", "comments": "string", "updatedAt": "datetime" }`
-  - Success: 200 OK
-  - Errors: 401 Unauthorized, 403 Forbidden, 404 Not Found, 400 Bad Request
-
 ### Manager Assessments
 
 - **POST /goals/{goalId}/manager-assessment**
-  - Description: Create a manager assessment for a goal
+  - Description: Create or update a manager assessment for a goal
   - Request Payload: `{ "rating": "number", "comments": "string" }`
   - Response: `{ "id": "uuid", "rating": "number", "comments": "string", "createdAt": "datetime" }`
   - Success: 201 Created
@@ -182,13 +154,6 @@
   - Response: `{ "id": "uuid", "rating": "number", "comments": "string", "createdAt": "datetime", "updatedAt": "datetime" }`
   - Success: 200 OK
   - Errors: 401 Unauthorized, 403 Forbidden, 404 Not Found
-
-- **PUT /goals/{goalId}/manager-assessment/{assessmentId}**
-  - Description: Update a manager assessment
-  - Request Payload: `{ "rating": "number", "comments": "string" }`
-  - Response: `{ "id": "uuid", "rating": "number", "comments": "string", "updatedAt": "datetime" }`
-  - Success: 200 OK
-  - Errors: 401 Unauthorized, 403 Forbidden, 404 Not Found, 400 Bad Request
 
 ## 3. Authentication and Authorization
 
@@ -205,20 +170,21 @@ The application will use Supabase Authentication for secure user access:
 ## 4. Validation and Business Logic
 
 ### Goal Validation
-- Total weight of all goals for an employee in an assessment process must equal 100%
+- Weight of a single goal must be in range 0% to 100%
 - API will validate this constraint for all goal creation/update operations
 - If validation fails, the API will return validation errors in the response
 
 ### Assessment Process Status Flow
 - Assessment processes follow a defined status flow:
-  - "in definition" → "awaiting self-assessment" → "in self-assessment" → "awaiting manager assessment" → "completed"
+  - "in definition" → "in self-assessment" → "awaiting manager assessment" → "completed"
 - API endpoints will enforce status constraints:
   - Goals can only be created/edited when process is "in definition"
   - Self-assessments can only be created/edited when process is "in self-assessment"
   - Manager assessments can only be created/edited when process is "awaiting manager assessment"
 
 ### Business Logic Implementation
-- Goal creation/update endpoints will validate total weight = 100%
+- Goal creation/update endpoints will validate single goal weight between 0% and 100%
+- Assessment ratings must be in range between 0% and 150%
 - Status change endpoint will validate that all required actions are completed before allowing status transition
 - User role and hierarchy checks will be performed on all endpoints that require authorization
 - Query parameters will enable filtering and pagination for list endpoints
