@@ -17,13 +17,13 @@
 - **POST /auth/login**
   - Description: Authenticate user using Supabase Auth
   - Request Payload: `{ "email": "string", "password": "string" }`
-  - Response: `{ "token": "string", "user": { "id": "uuid", "email": "string", "role": "string" } }`
+  - Response: `{ "token": "string", "user": { "id": "uuid", "email": "string" } }`
   - Success: 200 OK
   - Errors: 401 Unauthorized, 400 Bad Request
 
 - **GET /auth/me**
   - Description: Get current authenticated user information
-  - Response: `{ "id": "uuid", "email": "string", "role": "string", "managerId": "uuid" }`
+  - Response: `{ "id": "uuid", "email": "string", "managerId": "uuid" }`
   - Success: 200 OK
   - Errors: 401 Unauthorized
 
@@ -31,14 +31,14 @@
 
 - **GET /users**
   - Description: Get a list of users (for admin purposes)
-  - Query Parameters: `role` (optional), `page`, `limit`
-  - Response: `{ "users": [{ "id": "uuid", "email": "string", "name": "string", "role": "string", "managerId": "uuid" }], "total": "number", "page": "number", "limit": "number" }`
+  - Query Parameters: `page`, `limit`
+  - Response: `{ "users": [{ "id": "uuid", "email": "string", "name": "string", "managerId": "uuid" }], "total": "number", "page": "number", "limit": "number" }`
   - Success: 200 OK
   - Errors: 401 Unauthorized, 403 Forbidden
 
 - **GET /users/{userId}**
   - Description: Get a specific user
-  - Response: `{ "id": "uuid", "email": "string", "name": "string", "role": "string", "managerId": "uuid" }`
+  - Response: `{ "id": "uuid", "email": "string", "name": "string", "managerId": "uuid" }`
   - Success: 200 OK
   - Errors: 401 Unauthorized, 403 Forbidden, 404 Not Found
 
