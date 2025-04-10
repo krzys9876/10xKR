@@ -1,7 +1,8 @@
 import type { APIRoute } from "astro";
-import { supabaseClient } from "../../db/supabase.client";
 import type { GoalCategoryDTO, GoalCategoryListResponse } from "../../types";
 import { requireAuth } from "../../lib/auth-utils";
+
+export const prerender = false;
 
 export const GET: APIRoute = async ({ locals }) => {
   try {
@@ -24,8 +25,8 @@ export const GET: APIRoute = async ({ locals }) => {
       );
     }
 
-    // 2. Fetch goal categories from database
-    const { data: categories, error: categoriesError } = await supabaseClient
+    // Fetch goal categories from database
+    const { data: categories, error: categoriesError } = await supabase
       .from("goal_categories")
       .select("id, name")
       .order("name");
