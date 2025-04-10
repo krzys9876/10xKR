@@ -137,17 +137,17 @@ create index idx_manager_assessments_goal_id on public.manager_assessments(goal_
 -- -----------------------------------------------------------------------------
 
 -- Users table policies
--- Select: Employees can view their own profile and their manager's profile
+-- Select: Employees can view their own profile
 create policy "Users can view own profile" 
 on public.users for select 
 to authenticated 
-using (id = auth.uid() or id in (select manager_id from public.users where id = auth.uid()));
+using (id = auth.uid());
 
 -- Select: Managers can view their subordinates' profiles
-create policy "Managers can view subordinates' profiles" 
+create policy "Managers can view their reports" 
 on public.users for select 
 to authenticated 
-using (id in (select id from public.users where manager_id = auth.uid()));
+using (manager_id = auth.uid());
 
 -- Insert: Only authenticated users can create profiles
 create policy "Authenticated users can create profiles" 
