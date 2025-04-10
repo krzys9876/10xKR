@@ -1,5 +1,6 @@
 import type { APIRoute } from "astro";
 import type { UserProfile } from "../../../types";
+import { requireAuth } from "../../../lib/auth-utils";
 
 export const prerender = false;
 
@@ -7,19 +8,16 @@ export const GET: APIRoute = async ({ locals }) => {
   try {
     const supabase = locals.supabase;
 
-    // Get user data from Supabase session
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser();
+    // Check authentication using the common utility
+    const { user, error } = await requireAuth(supabase);
 
-    if (userError || !user) {
+    if (error || !user) {
       return new Response(
         JSON.stringify({
-          error: "Unauthorized: User not logged in or insufficient permissions",
+          error: error?.message || "User not authenticated",
         }),
         {
-          status: 401,
+          status: error?.status || 401,
           headers: {
             "Content-Type": "application/json",
           },
@@ -27,15 +25,18 @@ export const GET: APIRoute = async ({ locals }) => {
       );
     }
 
+    // User is guaranteed to be non-null at this point
+    const userId = user.id;
+
     // Add debug logging
     // eslint-disable-next-line no-console
-    console.log("Attempting to find user with ID:", user?.id);
+    console.log("Attempting to find user with ID:", userId);
 
     // Get additional user information from the users table
     const { data: userData, error: profileError } = await supabase
       .from("users")
       .select("id, email, manager_id")
-      .eq("id", user.id)
+      .eq("id", userId)
       .single();
 
     // eslint-disable-next-line no-console

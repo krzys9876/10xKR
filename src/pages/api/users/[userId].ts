@@ -3,6 +3,7 @@ import { z } from "zod";
 import type { UserDTO } from "../../../types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "../../../db/database.types";
+import { requireAuth } from "../../../lib/auth-utils";
 
 export const prerender = false;
 
@@ -13,19 +14,16 @@ export const GET: APIRoute = async ({ params, locals }) => {
   try {
     const supabase = locals.supabase;
 
-    // Check if user is logged in
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser();
+    // Check authentication using the common utility
+    const { user, error } = await requireAuth(supabase);
 
-    if (userError || !user) {
+    if (error || !user) {
       return new Response(
         JSON.stringify({
-          error: "Użytkownik niezalogowany",
+          error: error?.message || "Użytkownik niezalogowany",
         }),
         {
-          status: 401,
+          status: error?.status || 401,
           headers: {
             "Content-Type": "application/json",
           },

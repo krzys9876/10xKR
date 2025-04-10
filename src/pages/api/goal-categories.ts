@@ -1,24 +1,22 @@
 import type { APIRoute } from "astro";
 import { supabaseClient } from "../../db/supabase.client";
 import type { GoalCategoryDTO, GoalCategoryListResponse } from "../../types";
+import { requireAuth } from "../../lib/auth-utils";
 
 export const GET: APIRoute = async ({ locals }) => {
   try {
     const supabase = locals.supabase;
 
-    // Check if user is logged in
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser();
+    // Check authentication using the common utility
+    const { user, error } = await requireAuth(supabase);
 
-    if (userError || !user) {
+    if (error || !user) {
       return new Response(
         JSON.stringify({
-          error: "Użytkownik niezalogowany",
+          error: error?.message || "Użytkownik niezalogowany",
         }),
         {
-          status: 401,
+          status: error?.status || 401,
           headers: {
             "Content-Type": "application/json",
           },
