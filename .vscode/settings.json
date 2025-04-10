@@ -3,5 +3,7 @@
   "eslint.validate": ["javascript", "javascriptreact", "typescript", "typescriptreact", "astro"],
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": "explicit"
-  }
+  },
+  "files.eol": "\r\n",
+  "prettier.endOfLine": "auto"
 }
