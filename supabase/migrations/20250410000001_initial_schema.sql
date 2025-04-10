@@ -26,8 +26,8 @@ create type assessment_process_status as enum (
 create table public.users (
   id uuid primary key default gen_random_uuid(),
   email text not null unique,
-  first_name text not null,
-  last_name text not null,
+  first_name text null,
+  last_name text null,
   manager_id uuid references public.users(id),
   created_at timestamp with time zone default now() not null,
   updated_at timestamp with time zone default now() not null,
