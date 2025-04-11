@@ -13,6 +13,10 @@ const pathParamsSchema = z.object({
 });
 
 const updateGoalSchema = z.object({
+  title: z
+    .string()
+    .min(5, { message: "Tytuł celu musi mieć minimum 5 znaków" })
+    .max(50, { message: "Tytuł celu nie może przekraczać 50 znaków" }),
   description: z
     .string()
     .min(5, { message: "Opis celu musi mieć minimum 5 znaków" })
@@ -169,6 +173,7 @@ export const GET: APIRoute = async ({ params, locals }): Promise<Response> => {
     // 5. Format response
     const response: GoalDetailDTO = {
       id: goalDetails.id,
+      title: goalDetails.title || "",
       description: goalDetails.description || "",
       weight: goalDetails.weight,
       category: {
@@ -225,7 +230,7 @@ export const PUT: APIRoute = async ({ request, params, locals }): Promise<Respon
       return createErrorResponse("Dane nie spełniają wymagań walidacji", 400, validationResult.error.format());
     }
 
-    const { description, weight, categoryId } = validationResult.data;
+    const { title, description, weight, categoryId } = validationResult.data;
 
     // 4. Check access permission and get goal with process status
     const { hasAccess, error: accessError, goal } = await checkGoalAccessPermission(supabase, goalId, user.id);
@@ -254,13 +259,13 @@ export const PUT: APIRoute = async ({ request, params, locals }): Promise<Respon
     const { data: updatedGoal, error: updateError } = await supabase
       .from("goals")
       .update({
-        title: description.substring(0, 100),
+        title,
         description,
         weight,
         category_id: categoryId,
       })
       .eq("id", goalId)
-      .select("id, description, weight")
+      .select("id, title, description, weight")
       .single();
 
     if (updateError || !updatedGoal) {
@@ -270,6 +275,7 @@ export const PUT: APIRoute = async ({ request, params, locals }): Promise<Respon
     // 8. Format response
     const response: GoalResponse = {
       id: updatedGoal.id,
+      title: updatedGoal.title || "",
       description: updatedGoal.description || "",
       weight: updatedGoal.weight,
       category: {

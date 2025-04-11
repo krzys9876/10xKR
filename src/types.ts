@@ -117,6 +117,7 @@ export interface GoalCategoryListResponse {
 // Goal DTOs
 export interface GoalDTO {
   id: string;
+  title: string;
   description: string;
   weight: number;
   category: {

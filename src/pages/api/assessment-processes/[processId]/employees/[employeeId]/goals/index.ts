@@ -7,6 +7,10 @@ export const prerender = false;
 
 // Validation schemas
 const createGoalSchema = z.object({
+  title: z
+    .string()
+    .min(5, { message: "Tytuł celu musi mieć minimum 5 znaków" })
+    .max(50, { message: "Tytuł celu nie może przekraczać 50 znaków" }),
   description: z
     .string()
     .min(5, { message: "Opis celu musi mieć minimum 5 znaków" })
@@ -54,7 +58,7 @@ export const POST: APIRoute = async ({ request, params, locals }): Promise<Respo
       return createErrorResponse("Dane nie spełniają wymagań walidacji", 400, validationResult.error.format());
     }
 
-    const { description, weight, categoryId } = validationResult.data;
+    const { title, description, weight, categoryId } = validationResult.data;
 
     // 4. Business validations
 
@@ -109,14 +113,14 @@ export const POST: APIRoute = async ({ request, params, locals }): Promise<Respo
     const { data: newGoal, error: createError } = await supabase
       .from("goals")
       .insert({
-        title: description.substring(0, 100), // Using description as title, but truncating to reasonable length
+        title,
         description,
         weight,
         category_id: categoryId,
         user_id: employeeId,
         assessment_process_id: processId,
       })
-      .select("id, description, weight, category_id")
+      .select("id, title, description, weight, category_id")
       .single();
 
     if (createError || !newGoal) {
@@ -126,6 +130,7 @@ export const POST: APIRoute = async ({ request, params, locals }): Promise<Respo
     // 6. Format response
     const response: GoalResponse = {
       id: newGoal.id,
+      title: newGoal.title || "",
       description: newGoal.description || "",
       weight: newGoal.weight,
       category: {
@@ -197,7 +202,8 @@ export const GET: APIRoute = async ({ params, locals }): Promise<Response> => {
       .from("goals")
       .select(
         `
-        id, 
+        id,
+        title,
         description, 
         weight,
         goal_categories:category_id (
@@ -216,6 +222,7 @@ export const GET: APIRoute = async ({ params, locals }): Promise<Response> => {
     // 7. Transform data to DTOs
     const goalDTOs: GoalDTO[] = goals.map((goal) => ({
       id: goal.id,
+      title: goal.title || "",
       description: goal.description || "",
       weight: goal.weight,
       category: {
