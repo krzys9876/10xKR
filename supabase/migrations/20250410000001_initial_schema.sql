@@ -193,23 +193,23 @@ to authenticated
 using (true);
 
 -- Insert: Only authenticated users can create assessment processes
-create policy "Authenticated users can create assessment processes" 
+create policy "Users cannot create assessment processes" 
 on public.assessment_processes for insert 
 to authenticated 
-with check (true);
+with check (false);
 
--- Update: Only authenticated users can update assessment processes
-create policy "Authenticated users can update assessment processes" 
+-- Update: Only managers can update assessment processes
+create policy "Managers can update assessment processes" 
 on public.assessment_processes for update 
 to authenticated 
 using (true) 
-with check (true);
+with check (auth.uid() = any (select manager_id from public.users where manager_id is not null));
 
--- Delete: Only authenticated users can delete assessment processes
-create policy "Authenticated users can delete assessment processes" 
+-- Delete: Disable deletion of assessment_processes
+create policy "Users cannot delete assessment processes" 
 on public.assessment_processes for delete 
 to authenticated 
-using (true);
+using (false);
 
 -- Goal categories policies
 -- Select: All authenticated users can view goal categories
