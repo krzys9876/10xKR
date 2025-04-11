@@ -1,68 +1,35 @@
 import type { APIRoute } from "astro";
 import { z } from "zod";
 import type { AssessmentProcessDTO } from "../../../types";
-import { requireAuth } from "../../../lib/auth-utils";
+import { authenticateUser, createApiResponse, createErrorResponse } from "../../../lib/api-utils";
 
 export const prerender = false;
 
 // Validation schema for process ID
 const processIdSchema = z.string().uuid({ message: "Nieprawidłowy format identyfikatora procesu" });
 
-export const GET: APIRoute = async ({ params, locals }) => {
+export const GET: APIRoute = async ({ params, locals }): Promise<Response> => {
   try {
     const supabase = locals.supabase;
 
-    // Check if user is authenticated using the common utility
-    const { user, error } = await requireAuth(supabase);
-
-    if (error || !user) {
-      return new Response(
-        JSON.stringify({
-          error: error?.message || "Użytkownik niezalogowany",
-        }),
-        {
-          status: error?.status || 401,
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
+    // 1. Authenticate user
+    const { isAuthenticated, error: authError, user } = await authenticateUser(supabase);
+    if (!isAuthenticated || !user) {
+      return authError || createErrorResponse("Nieautoryzowany dostęp", 401);
     }
 
-    // Validate process ID
+    // 2. Validate process ID
     const processId = params.processId;
     if (!processId) {
-      return new Response(
-        JSON.stringify({
-          error: "Brak identyfikatora procesu",
-        }),
-        {
-          status: 400,
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      return createErrorResponse("Brak identyfikatora procesu", 400);
     }
 
     const validationResult = processIdSchema.safeParse(processId);
-
     if (!validationResult.success) {
-      return new Response(
-        JSON.stringify({
-          error: "Nieprawidłowy format identyfikatora procesu",
-          details: validationResult.error.format(),
-        }),
-        {
-          status: 400,
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      return createErrorResponse("Nieprawidłowy format identyfikatora procesu", 400, validationResult.error.format());
     }
 
-    // Fetch process data
+    // 3. Fetch process data
     const { data: processData, error: processError } = await supabase
       .from("assessment_processes")
       .select("id, title, status, is_active, start_date, end_date")
@@ -72,47 +39,16 @@ export const GET: APIRoute = async ({ params, locals }) => {
     if (processError) {
       if (processError.code === "PGRST116") {
         // Process not found (PGRST116 is the error code for "not found")
-        return new Response(
-          JSON.stringify({
-            error: "Nie znaleziono procesu oceny o podanym identyfikatorze",
-          }),
-          {
-            status: 404,
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }
-        );
+        return createErrorResponse("Nie znaleziono procesu oceny o podanym identyfikatorze", 404);
       }
-
-      return new Response(
-        JSON.stringify({
-          error: "Błąd podczas pobierania danych procesu oceny",
-        }),
-        {
-          status: 500,
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      return createErrorResponse("Błąd podczas pobierania danych procesu oceny", 500);
     }
 
     if (!processData) {
-      return new Response(
-        JSON.stringify({
-          error: "Nie znaleziono procesu oceny o podanym identyfikatorze",
-        }),
-        {
-          status: 404,
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      return createErrorResponse("Nie znaleziono procesu oceny o podanym identyfikatorze", 404);
     }
 
-    // Prepare response in required format
+    // 4. Prepare response in required format
     const response: AssessmentProcessDTO = {
       id: processData.id,
       name: processData.title,
@@ -122,26 +58,11 @@ export const GET: APIRoute = async ({ params, locals }) => {
       endDate: processData.end_date,
     };
 
-    // Return process data
-    return new Response(JSON.stringify(response), {
-      status: 200,
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-  } catch (err) {
+    // 5. Return process data
+    return createApiResponse(response);
+  } catch (error) {
     // eslint-disable-next-line no-console
-    console.error("Error in /assessment-processes/{processId} endpoint:", err);
-    return new Response(
-      JSON.stringify({
-        error: "Wystąpił błąd podczas przetwarzania żądania",
-      }),
-      {
-        status: 500,
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    console.error("Error in /assessment-processes/{processId} endpoint:", error);
+    return createErrorResponse("Wystąpił błąd podczas przetwarzania żądania", 500);
   }
 };
