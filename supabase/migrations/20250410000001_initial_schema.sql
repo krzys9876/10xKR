@@ -92,12 +92,12 @@ alter table public.goals enable row level security;
 create table public.self_assessments (
   id uuid primary key default gen_random_uuid(),
   goal_id uuid not null references public.goals(id) on delete cascade,
-  rating integer not null, -- Rating scale (1-5)
+  rating integer not null, -- Rating scale (0-150)
   comments text,
   created_at timestamp with time zone default now() not null,
   updated_at timestamp with time zone default now() not null,
   
-  constraint valid_rating check (rating >= 1 and rating <= 5),
+  constraint valid_rating check (rating >= 0 and rating <= 150),
   constraint unique_self_assessment_per_goal unique (goal_id)
 );
 
@@ -108,12 +108,12 @@ alter table public.self_assessments enable row level security;
 create table public.manager_assessments (
   id uuid primary key default gen_random_uuid(),
   goal_id uuid not null references public.goals(id) on delete cascade,
-  rating integer not null, -- Rating scale (1-5)
+  rating integer not null, -- Rating scale (0-150)
   comments text,
   created_at timestamp with time zone default now() not null,
   updated_at timestamp with time zone default now() not null,
   
-  constraint valid_rating check (rating >= 1 and rating <= 5),
+  constraint valid_rating check (rating >= 0 and rating <= 150),
   constraint unique_manager_assessment_per_goal unique (goal_id)
 );
 
