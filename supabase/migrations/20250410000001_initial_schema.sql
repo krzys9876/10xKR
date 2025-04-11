@@ -162,6 +162,23 @@ to authenticated
 using (id = auth.uid()) 
 with check (id = auth.uid());
 
+-- copied from stack overflow
+CREATE FUNCTION is_manager_of(employee_id uuid, _manager_id uuid) RETURNS bool AS $$
+SELECT EXISTS (
+  SELECT 1
+  FROM public.users u
+  WHERE u.id = employee_id
+  AND u.manager_id = _manager_id
+);
+$$ LANGUAGE sql SECURITY DEFINER;
+
+-- Select: Employees can view their manager's profile
+CREATE POLICY "Users can view manager profile" 
+ON public.users AS PERMISSIVE FOR select 
+TO authenticated
+USING (is_manager_of(auth.uid(), id));
+
+
 -- Delete: Disable deletion of user profiles
 create policy "Disable user profile deletion" 
 on public.users for delete 

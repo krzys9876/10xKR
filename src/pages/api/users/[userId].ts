@@ -1,8 +1,6 @@
 import type { APIRoute } from "astro";
 import { z } from "zod";
 import type { UserDTO } from "../../../types";
-import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Database } from "../../../db/database.types";
 import { requireAuth } from "../../../lib/auth-utils";
 
 export const prerender = false;
@@ -57,24 +55,6 @@ export const GET: APIRoute = async ({ params, locals }) => {
         }),
         {
           status: 400,
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-    }
-
-    // Check permissions - user must be admin or requesting their own data
-    const isAdmin = await checkIfUserIsAdmin(supabase, user.id);
-    const isSelf = userId === user.id;
-
-    if (!isAdmin && !isSelf) {
-      return new Response(
-        JSON.stringify({
-          error: "Brak uprawnień do wykonania tej operacji",
-        }),
-        {
-          status: 403,
           headers: {
             "Content-Type": "application/json",
           },
@@ -188,12 +168,3 @@ export const GET: APIRoute = async ({ params, locals }) => {
     );
   }
 };
-
-// Helper function to check if user is an admin
-async function checkIfUserIsAdmin(supabase: SupabaseClient<Database>, userId: string): Promise<boolean> {
-  // In a real application, there would be logic to check if the user has admin privileges
-  // For simplicity, we check if the user exists in the admins table
-  const { data, error } = await supabase.from("admins").select("user_id").eq("user_id", userId).single();
-
-  return !error && !!data;
-}
