@@ -64,12 +64,6 @@
   - Success: 200 OK
   - Errors: 401 Unauthorized, 404 Not Found
 
-- **GET /assessment-processes/{processId}/status-history**
-  - Description: Get status history for an assessment process
-  - Response: `{ "history": [{ "status": "string", "changedAt": "datetime", "changedBy": { "id": "uuid", "name": "string" } }] }`
-  - Success: 200 OK
-  - Errors: 401 Unauthorized, 403 Forbidden, 404 Not Found
-
 - **PUT /assessment-processes/{processId}/status**
   - Description: Update the status of an assessment process
   - Request Payload: `{ "status": "string" }`
