@@ -36,7 +36,7 @@ import {
 import { z } from "zod";
 
 const assessmentProcessFilterSchema = z.object({
-  status: z.enum(['in_definition', 'awaiting_self_assessment', 'in_self_assessment', 'awaiting_manager_assessment', 'completed']).optional(),
+  status: z.enum(['in_definition', 'in_self_assessment', 'awaiting_manager_assessment', 'completed']).optional(),
   active: z.coerce.boolean().optional(),
   page: z.coerce.number().int().positive().optional().default(1),
   limit: z.coerce.number().int().positive().max(100).optional().default(10)
@@ -83,7 +83,7 @@ export const prerender = false;
 
 // Schemat walidacji parametrów filtrowania
 const assessmentProcessFilterSchema = z.object({
-  status: z.enum(['in_definition', 'awaiting_self_assessment', 'in_self_assessment', 'awaiting_manager_assessment', 'completed']).optional(),
+  status: z.enum(['in_definition', 'in_self_assessment', 'awaiting_manager_assessment', 'completed']).optional(),
   active: z.coerce.boolean().optional(),
   page: z.coerce.number().int().positive().optional().default(1),
   limit: z.coerce.number().int().positive().max(100).optional().default(10)
@@ -435,7 +435,7 @@ import { z } from "zod";
 
 const processIdSchema = z.string().uuid({ message: "Nieprawidłowy format identyfikatora procesu" });
 const statusUpdateSchema = z.object({
-  status: z.enum(['in_definition', 'awaiting_self_assessment', 'in_self_assessment', 'awaiting_manager_assessment', 'completed'])
+  status: z.enum(['in_definition', 'in_self_assessment', 'awaiting_manager_assessment', 'completed'])
 });
 ```
 
@@ -475,13 +475,12 @@ const processIdSchema = z.string().uuid({ message: "Nieprawidłowy format identy
 
 // Schemat walidacji danych do aktualizacji statusu
 const statusUpdateSchema = z.object({
-  status: z.enum(['in_definition', 'awaiting_self_assessment', 'in_self_assessment', 'awaiting_manager_assessment', 'completed'])
+  status: z.enum(['in_definition', 'in_self_assessment', 'awaiting_manager_assessment', 'completed'])
 });
 
 // Mapa dozwolonych przejść statusów
 const allowedStatusTransitions = {
-  'in_definition': ['awaiting_self_assessment'],
-  'awaiting_self_assessment': ['in_self_assessment'],
+  'in_definition': ['in_self_assessment'],
   'in_self_assessment': ['awaiting_manager_assessment'],
   'awaiting_manager_assessment': ['completed'],
   'completed': []

@@ -7,15 +7,7 @@ export const prerender = false;
 
 // Validation schema for filtering parameters
 const assessmentProcessFilterSchema = z.object({
-  status: z
-    .enum([
-      "in_definition",
-      "awaiting_self_assessment",
-      "in_self_assessment",
-      "awaiting_manager_assessment",
-      "completed",
-    ])
-    .optional(),
+  status: z.enum(["in_definition", "in_self_assessment", "awaiting_manager_assessment", "completed"]).optional(),
   active: z.coerce.boolean().optional(),
   page: z.coerce.number().int().positive().optional().default(1),
   limit: z.coerce.number().int().positive().max(100).optional().default(10),

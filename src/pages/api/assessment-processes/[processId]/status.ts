@@ -12,19 +12,12 @@ const processIdSchema = z.string().uuid({ message: "Nieprawidłowy format identy
 
 // Schemat walidacji danych do aktualizacji statusu
 const statusUpdateSchema = z.object({
-  status: z.enum([
-    "in_definition",
-    "awaiting_self_assessment",
-    "in_self_assessment",
-    "awaiting_manager_assessment",
-    "completed",
-  ]),
+  status: z.enum(["in_definition", "in_self_assessment", "awaiting_manager_assessment", "completed"]),
 });
 
 // Mapa dozwolonych przejść statusów
 const allowedStatusTransitions: Record<AssessmentProcessStatus, AssessmentProcessStatus[]> = {
-  in_definition: ["awaiting_self_assessment"],
-  awaiting_self_assessment: ["in_self_assessment"],
+  in_definition: ["in_self_assessment"],
   in_self_assessment: ["awaiting_manager_assessment"],
   awaiting_manager_assessment: ["completed"],
   completed: [],

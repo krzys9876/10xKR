@@ -233,12 +233,7 @@ export interface Database {
     Views: Record<string, never>; // this means: intentionally empty
     Functions: Record<string, never>;
     Enums: {
-      assessment_process_status:
-        | "in_definition"
-        | "awaiting_self_assessment"
-        | "in_self_assessment"
-        | "awaiting_manager_assessment"
-        | "completed";
+      assessment_process_status: "in_definition" | "in_self_assessment" | "awaiting_manager_assessment" | "completed";
     };
     CompositeTypes: Record<string, never>;
   };
@@ -342,13 +337,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      assessment_process_status: [
-        "in_definition",
-        "awaiting_self_assessment",
-        "in_self_assessment",
-        "awaiting_manager_assessment",
-        "completed",
-      ],
+      assessment_process_status: ["in_definition", "in_self_assessment", "awaiting_manager_assessment", "completed"],
     },
   },
 } as const;

@@ -12,7 +12,6 @@
 -- Process statuses enum
 create type assessment_process_status as enum (
   'in_definition',
-  'awaiting_self_assessment',
   'in_self_assessment',
   'awaiting_manager_assessment',
   'completed'

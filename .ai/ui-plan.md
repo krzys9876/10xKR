@@ -33,7 +33,7 @@ Główny przepływ jest podzielony na etapy odpowiadające statusom procesu ocen
 ### Dashboard (Strona główna)
 
 - **Ścieżka widoku:** `/dashboard`
-- **Główny cel:** Wybór procesu oceny i (dla kierownika) pracownika
+- **Główny cel:** Wybór procesu oceny i trybów: dla kierownika i dla pracownika
 - **Kluczowe informacje do wyświetlenia:**
   - Informacje o zalogowanym użytkowniku
   - Lista dostępnych procesów oceny
