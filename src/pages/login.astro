@@ -1,0 +1,21 @@
+---
+import Layout from "../layouts/Layout.astro";
+import { LoginForm } from "../components/auth/LoginForm";
+---
+
+<Layout title="Logowanie | System oceny celów">
+  <div class="flex min-h-screen flex-col items-center justify-center px-4 py-12">
+    <div class="w-full max-w-md space-y-6">
+      <div class="text-center">
+        <h1 class="text-2xl font-bold tracking-tight text-gray-900 dark:text-gray-100">Zaloguj się do systemu</h1>
+        <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+          Wprowadź swoje dane, aby uzyskać dostęp do systemu oceny celów
+        </p>
+      </div>
+
+      <div class="mt-8 bg-white dark:bg-gray-800 p-8 shadow rounded-lg">
+        <LoginForm client:load />
+      </div>
+    </div>
+  </div>
+</Layout>
