@@ -17,19 +17,12 @@ const statusUpdateSchema = z.object({
 
 // Mapa dozwolonych przejść statusów
 const allowedStatusTransitions: Record<AssessmentProcessStatus, AssessmentProcessStatus[]> = {
+  // Forward and backward
   in_definition: ["in_self_assessment"],
-  in_self_assessment: ["awaiting_manager_assessment"],
-  awaiting_manager_assessment: ["completed"],
-  completed: [],
+  in_self_assessment: ["in_definition", "awaiting_manager_assessment"],
+  awaiting_manager_assessment: ["in_self_assessment", "completed"],
+  completed: ["awaiting_manager_assessment"],
 };
-
-// Typ dla tabeli status_history, który nie jest zdefiniowany w typach bazy danych
-interface StatusHistoryInsert {
-  assessment_process_id: string;
-  status: AssessmentProcessStatus;
-  changed_at: string;
-  changed_by_id: string;
-}
 
 export const PUT: APIRoute = async ({ params, request, locals }) => {
   try {
@@ -198,24 +191,6 @@ export const PUT: APIRoute = async ({ params, request, locals }) => {
           },
         }
       );
-    }
-
-    // Dodaj wpis do historii statusów
-    const statusHistoryRecord: StatusHistoryInsert = {
-      assessment_process_id: processId,
-      status: newStatus,
-      changed_at: now,
-      changed_by_id: user.id,
-    };
-
-    // Używamy "any" jako obejścia braku definicji tabeli w typach
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error: historyError } = await (supabase as any).from("status_history").insert(statusHistoryRecord);
-
-    if (historyError) {
-      // eslint-disable-next-line no-console
-      console.error("Error adding status history:", historyError);
-      // Kontynuujemy mimo błędu zapisu historii, ale logujemy błąd
     }
 
     // Przygotuj odpowiedź

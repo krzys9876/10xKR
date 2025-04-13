@@ -1,7 +1,7 @@
 import { ProcessStepper } from "../dashboard/ProcessStepper";
 import { GoalsList } from "./GoalsList";
 import { useGoals } from "./hooks/useGoals";
-import type { AssessmentProcessViewModel } from "@/types";
+import type { AssessmentProcessStatus, AssessmentProcessViewModel } from "@/types";
 import { useEffect, useState } from "react";
 import { Button } from "../ui/button";
 import { ArrowLeft, User } from "lucide-react";
@@ -15,6 +15,8 @@ interface GoalsViewPageProps {
 export function GoalsViewPage({ processId, employeeId, process }: GoalsViewPageProps) {
   const [localEmployeeId, setLocalEmployeeId] = useState(employeeId);
   const [isLoadingUser, setIsLoadingUser] = useState(!employeeId);
+  const [isManager, setIsManager] = useState(false);
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
 
   // Jeśli employeeId jest pusty, spróbuj pobrać ID zalogowanego użytkownika
   useEffect(() => {
@@ -24,6 +26,8 @@ export function GoalsViewPage({ processId, employeeId, process }: GoalsViewPageP
         const userData = JSON.parse(localStorage.getItem("user") || "{}");
         if (userData.id) {
           setLocalEmployeeId(userData.id);
+          // Sprawdź, czy użytkownik jest managerem
+          setIsManager(userData.isManager || false);
         }
       } catch (err) {
         // eslint-disable-next-line no-console
@@ -32,6 +36,14 @@ export function GoalsViewPage({ processId, employeeId, process }: GoalsViewPageP
         setIsLoadingUser(false);
       }
     } else {
+      // Jeśli mamy employeeId, sprawdź czy zalogowany użytkownik jest managerem
+      try {
+        const userData = JSON.parse(localStorage.getItem("user") || "{}");
+        setIsManager(userData.isManager || false);
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.error("Błąd podczas sprawdzania statusu managera:", err);
+      }
       setIsLoadingUser(false);
     }
   }, [employeeId]);
@@ -50,6 +62,60 @@ export function GoalsViewPage({ processId, employeeId, process }: GoalsViewPageP
     processId,
     employeeId: localEmployeeId,
   });
+
+  // Handler dla zmiany statusu procesu
+  const handleStatusChange = async (newStatus: AssessmentProcessStatus) => {
+    if (!process || isUpdatingStatus) return;
+
+    try {
+      setIsUpdatingStatus(true);
+
+      const response = await fetch(`/api/assessment-processes/${processId}/status`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({
+          status: newStatus,
+          processId: processId,
+        }),
+      });
+
+      if (!response.ok) {
+        // Try to extract detailed error message from response
+        let errorMessage = "Błąd aktualizacji statusu procesu";
+        try {
+          const errorData = await response.json();
+          if (errorData.message) {
+            errorMessage = `${errorMessage}: ${errorData.message}`;
+          } else if (errorData.error) {
+            errorMessage = `${errorMessage}: ${errorData.error}`;
+          }
+          // eslint-disable-next-line no-console
+          console.error("Status update error details:", errorData);
+        } catch {
+          // If we can't parse the response as JSON, use status text
+          errorMessage = `${errorMessage} (${response.status}: ${response.statusText})`;
+        }
+
+        throw new Error(errorMessage);
+      }
+
+      const result = await response.json();
+      // eslint-disable-next-line no-console
+      console.log("Status updated successfully:", result);
+
+      // Prosta aktualizacja UI bez pełnego odświeżenia
+      window.location.reload();
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error("Error updating process status:", error);
+      alert(error instanceof Error ? error.message : "Wystąpił nieznany błąd podczas aktualizacji statusu procesu");
+    } finally {
+      setIsUpdatingStatus(false);
+    }
+  };
 
   // Dla debugowania - wyświetl w konsoli czy samoocena jest dostępna
   useEffect(() => {
@@ -72,7 +138,7 @@ export function GoalsViewPage({ processId, employeeId, process }: GoalsViewPageP
           href="/dashboard"
           className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors"
         >
-          Powrót do dashboardu
+          Powrót do strony głównej
         </a>
       </div>
     );
@@ -92,14 +158,14 @@ export function GoalsViewPage({ processId, employeeId, process }: GoalsViewPageP
     );
   }
 
-  const fullIsLoading = isLoading || isLoadingUser;
+  const fullIsLoading = isLoading || isLoadingUser || isUpdatingStatus;
 
   return (
     <div className="container mx-auto px-4 py-6">
       <div className="flex items-center mb-4">
         <Button variant="ghost" size="sm" className="flex items-center gap-1" asChild>
           <a href="/dashboard">
-            <ArrowLeft className="h-4 w-4" /> Powrót do dashboardu
+            <ArrowLeft className="h-4 w-4" /> Powrót do strony głównej
           </a>
         </Button>
       </div>
@@ -107,7 +173,12 @@ export function GoalsViewPage({ processId, employeeId, process }: GoalsViewPageP
       {process && (
         <div className="mb-6">
           <h1 className="text-2xl font-bold mb-4">{process.name}</h1>
-          <ProcessStepper currentStatus={process.status} />
+          <ProcessStepper
+            currentStatus={process.status}
+            isManager={isManager}
+            onStatusChange={handleStatusChange}
+            processId={process.id}
+          />
         </div>
       )}
 

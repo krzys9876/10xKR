@@ -11,6 +11,7 @@ import type {
   UserDTO,
   UserViewModel,
   EmployeeDTO,
+  AssessmentProcessStatus,
 } from "../../types";
 import { ProcessCard } from "./ProcessCard";
 import { EmployeeList } from "./EmployeeList";
@@ -21,6 +22,7 @@ interface UseDashboardResult {
   fetchProcesses: (params?: AssessmentProcessFilterQueryParams) => Promise<void>;
   selectProcess: (process: AssessmentProcessViewModel) => void;
   selectEmployee: (employee: EmployeeDTO) => void;
+  updateProcessStatus: (processId: string, newStatus: AssessmentProcessStatus) => Promise<void>;
   logout: () => void;
 }
 
@@ -87,6 +89,69 @@ const useDashboard = (): UseDashboardResult => {
         ...prev,
         isLoading: false,
         error: error instanceof Error ? error.message : "Nieoczekiwany błąd",
+      }));
+    }
+  };
+
+  // New function to update process status
+  const updateProcessStatus = async (processId: string, newStatus: AssessmentProcessStatus) => {
+    try {
+      setDashboardState((prev) => ({ ...prev, isLoading: true }));
+
+      const response = await fetch(`/api/assessment-processes/${processId}/status`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({
+          status: newStatus,
+          processId: processId,
+        }),
+      });
+
+      if (!response.ok) {
+        // Try to extract detailed error message from response
+        let errorMessage = "Błąd aktualizacji statusu procesu";
+        try {
+          const errorData = await response.json();
+          if (errorData.message) {
+            errorMessage = `${errorMessage}: ${errorData.message}`;
+          } else if (errorData.error) {
+            errorMessage = `${errorMessage}: ${errorData.error}`;
+          }
+          // eslint-disable-next-line no-console
+          console.error("Status update error details:", errorData);
+        } catch {
+          // If we can't parse the response as JSON, use status text
+          errorMessage = `${errorMessage} (${response.status}: ${response.statusText})`;
+        }
+
+        throw new Error(errorMessage);
+      }
+
+      // Fetch updated processes after status change
+      await fetchProcesses();
+
+      // Update selected process if it's the one that was modified
+      setDashboardState((prev) => {
+        if (prev.selectedProcess && prev.selectedProcess.id === processId) {
+          const updatedProcess = prev.processes.find((p) => p.id === processId);
+          return {
+            ...prev,
+            selectedProcess: updatedProcess,
+            isLoading: false,
+          };
+        }
+        return { ...prev, isLoading: false };
+      });
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error("Error updating process status:", error);
+      alert(error instanceof Error ? error.message : "Wystąpił nieznany błąd podczas aktualizacji statusu procesu");
+      setDashboardState((prev) => ({
+        ...prev,
+        isLoading: false,
       }));
     }
   };
@@ -197,13 +262,19 @@ const useDashboard = (): UseDashboardResult => {
     fetchProcesses,
     selectProcess,
     selectEmployee,
+    updateProcessStatus,
     logout,
   };
 };
 
 export function DashboardView() {
-  const { dashboardState, logout, selectProcess, selectEmployee } = useDashboard();
+  const { dashboardState, logout, selectProcess, selectEmployee, updateProcessStatus } = useDashboard();
   const { isLoading, error, processes, employees, selectedProcess, selectedEmployee, isManager } = dashboardState;
+
+  const handleStatusChange = async (newStatus: AssessmentProcessStatus) => {
+    if (!selectedProcess) return;
+    await updateProcessStatus(selectedProcess.id, newStatus);
+  };
 
   if (isLoading) {
     return <div className="p-4">Ładowanie danych...</div>;
@@ -277,7 +348,12 @@ export function DashboardView() {
               </a>
             </div>
           </div>
-          <ProcessStepper currentStatus={selectedProcess.status} />
+          <ProcessStepper
+            currentStatus={selectedProcess.status}
+            isManager={isManager}
+            onStatusChange={handleStatusChange}
+            processId={selectedProcess.id}
+          />
         </div>
       )}
     </div>
