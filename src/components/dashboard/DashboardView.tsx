@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { UserProfileHeader } from "./UserProfileHeader";
-// import { ProcessList } from "./ProcessList"; // Removing since file doesn't exist
 import { ProcessStepper } from "./ProcessStepper";
 import { STATUS_LABELS } from "../../types";
 import type {
@@ -49,8 +48,7 @@ const useDashboard = (): UseDashboardResult => {
       if (params?.limit) queryParams.set("limit", params.limit.toString());
 
       // Fetch processes from API
-      //const response = await fetch(`/api/assessment-processes?/${queryParams}`);
-      const response = await fetch(`/api/assessment-processes?status=in_definition&page=1&limit=100&active=true`);
+      const response = await fetch(`/api/assessment-processes?/${queryParams}`);
       if (!response.ok) {
         throw new Error("Błąd pobierania procesów oceny");
       }
