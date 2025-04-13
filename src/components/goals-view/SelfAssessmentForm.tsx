@@ -17,6 +17,7 @@ export function SelfAssessmentForm({
 
   // Log initial values for debugging
   useEffect(() => {
+    // eslint-disable-next-line no-console
     console.log(`SelfAssessmentForm for goal ${goalId}:`, {
       initialRating,
       initialComment,

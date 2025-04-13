@@ -27,11 +27,13 @@ export function useGoals({ processId, employeeId }: UseGoalsProps): UseGoalsResu
     try {
       const response = await fetch(`/api/goals/${goalId}/self-assessment`);
       if (!response.ok) {
+        // eslint-disable-next-line no-console
         console.warn(`Nie udało się pobrać samooceny dla celu ${goalId}`);
         return null;
       }
 
       const data = await response.json();
+      // eslint-disable-next-line no-console
       console.log(`Pobrano samoocenę dla celu ${goalId}:`, data);
 
       // API może zwracać dane w różnych formatach, obsłużmy kilka możliwości
@@ -55,9 +57,11 @@ export function useGoals({ processId, employeeId }: UseGoalsProps): UseGoalsResu
         };
       }
 
+      // eslint-disable-next-line no-console
       console.warn(`Nieznany format odpowiedzi API dla celu ${goalId}:`, data);
       return null;
     } catch (err) {
+      // eslint-disable-next-line no-console
       console.error(`Błąd podczas pobierania samooceny dla celu ${goalId}:`, err);
       return null;
     }
@@ -98,7 +102,9 @@ export function useGoals({ processId, employeeId }: UseGoalsProps): UseGoalsResu
         setTotalWeight(mockGoalsResponse.totalWeight);
 
         // Log dla debugowania
+        // eslint-disable-next-line no-console
         console.log("Mock status:", mockStatus, "canEdit:", mockStatus === "in_self_assessment");
+        // eslint-disable-next-line no-console
         console.log("Mock goals:", goalsViewModel);
 
         setIsLoading(false);
@@ -145,6 +151,7 @@ export function useGoals({ processId, employeeId }: UseGoalsProps): UseGoalsResu
           }
         }
 
+        // eslint-disable-next-line no-console
         console.log("Goals with fetched self-assessments:", updatedGoals);
         setGoals(updatedGoals);
       }
@@ -257,7 +264,7 @@ export function useGoals({ processId, employeeId }: UseGoalsProps): UseGoalsResu
         setIsSaving((prev) => ({ ...prev, [goalId]: false }));
       }
     },
-    [processId, canEditSelfAssessment]
+    [canEditSelfAssessment]
   );
 
   // Załadowanie celów przy montowaniu komponentu

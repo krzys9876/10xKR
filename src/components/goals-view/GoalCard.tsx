@@ -8,8 +8,10 @@ export function GoalCard({ goal, canEditSelfAssessment, saveSelfAssessment, isSa
   // Log self-assessment data for debugging
   useEffect(() => {
     if (goal.selfAssessment) {
+      // eslint-disable-next-line no-console
       console.log(`GoalCard ${goal.id} has self-assessment:`, goal.selfAssessment);
     } else {
+      // eslint-disable-next-line no-console
       console.log(`GoalCard ${goal.id} has NO self-assessment data`);
     }
   }, [goal]);

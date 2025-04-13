@@ -44,7 +44,9 @@ export function GoalsViewPage({ processId, employeeId, process }: GoalsViewPageP
 
   // Dla debugowania - wyświetl w konsoli czy samoocena jest dostępna
   useEffect(() => {
+    // eslint-disable-next-line no-console
     console.log("canEditSelfAssessment:", canEditSelfAssessment);
+    // eslint-disable-next-line no-console
     console.log("saveSelfAssessment available:", !!saveSelfAssessment);
   }, [canEditSelfAssessment, saveSelfAssessment]);
 
