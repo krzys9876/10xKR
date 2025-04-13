@@ -4,7 +4,7 @@ import type { GoalDTO } from "@/types";
 export const mockGoals: GoalDTO[] = [
   {
     id: "1",
-    title: "Zwiększenie efektywności zespołu",
+    title: "[Przykład] Zwiększenie efektywności zespołu",
     description: "Wdrożenie nowych procesów pozwalających na skrócenie czasu realizacji zadań o 15%",
     weight: 40,
     category: {
@@ -14,7 +14,7 @@ export const mockGoals: GoalDTO[] = [
   },
   {
     id: "2",
-    title: "Poprawa jakości kodu",
+    title: "[Przykład] Poprawa jakości kodu",
     description: "Zmniejszenie liczby błędów w produkcji o 30% poprzez wprowadzenie testów jednostkowych i code review",
     weight: 30,
     category: {
@@ -24,7 +24,7 @@ export const mockGoals: GoalDTO[] = [
   },
   {
     id: "3",
-    title: "Rozwój umiejętności",
+    title: "[Przykład] Rozwój umiejętności",
     description:
       "Opanowanie nowych technologii (React, TypeScript) na poziomie pozwalającym na samodzielne tworzenie komponentów",
     weight: 30,
