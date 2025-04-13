@@ -23,7 +23,9 @@ export const useLoginForm = () => {
       const response = await login(formData);
 
       // Store token in localStorage
-      localStorage.setItem("authToken", response.token);
+      localStorage.setItem("token", response.token);
+      // Store user data in localStorage
+      localStorage.setItem("user", JSON.stringify(response.user));
 
       // Redirect to dashboard
       window.location.href = "/dashboard";

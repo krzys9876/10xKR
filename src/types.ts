@@ -42,6 +42,12 @@ export interface UserDTO {
   subordinates?: UserDTO[];
 }
 
+// Extended user view model for dashboard
+export interface UserViewModel extends UserDTO {
+  isManager: boolean;
+  managerName?: string;
+}
+
 export interface EmployeeDTO {
   id: string;
   email: string;
@@ -213,3 +219,29 @@ export interface AssessmentProcessFilterQueryParams extends PaginationQueryParam
 export interface PredefinedGoalFilterQueryParams extends PaginationQueryParams {
   category?: string;
 }
+
+// Dashboard view models
+export interface AssessmentProcessViewModel extends AssessmentProcessDTO {
+  statusLabel: string;
+  formattedStartDate: string;
+  formattedEndDate: string;
+}
+
+export interface DashboardViewModel {
+  user: UserViewModel;
+  processes: AssessmentProcessViewModel[];
+  employees: EmployeeDTO[];
+  selectedProcess?: AssessmentProcessViewModel;
+  selectedEmployee?: EmployeeDTO;
+  isManager: boolean;
+  isLoading: boolean;
+  error?: string;
+}
+
+// Mapping of status to Polish labels
+export const STATUS_LABELS: Record<AssessmentProcessStatus, string> = {
+  in_definition: "W definiowaniu",
+  in_self_assessment: "W samoocenie",
+  awaiting_manager_assessment: "W ocenie kierownika",
+  completed: "Zakończony",
+};
