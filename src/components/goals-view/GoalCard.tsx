@@ -1,10 +1,19 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import type { GoalCardProps } from "./types";
 import { SelfAssessmentForm } from "./SelfAssessmentForm";
 
 export function GoalCard({ goal, canEditSelfAssessment, saveSelfAssessment, isSaving }: GoalCardProps) {
+  // Log self-assessment data for debugging
+  useEffect(() => {
+    if (goal.selfAssessment) {
+      console.log(`GoalCard ${goal.id} has self-assessment:`, goal.selfAssessment);
+    } else {
+      console.log(`GoalCard ${goal.id} has NO self-assessment data`);
+    }
+  }, [goal]);
+
   return (
     <Card className="mb-4 shadow-sm hover:shadow transition-shadow">
       <CardHeader className="pb-2">

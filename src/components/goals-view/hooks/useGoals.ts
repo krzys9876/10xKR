@@ -22,6 +22,47 @@ export function useGoals({ processId, employeeId }: UseGoalsProps): UseGoalsResu
   // Czy można edytować samoocenę (tylko dla statusu "in_self_assessment")
   const canEditSelfAssessment = processStatus === "in_self_assessment";
 
+  // Pomocnicza funkcja do pobierania samooceny dla pojedynczego celu
+  const fetchSelfAssessment = async (goalId: string) => {
+    try {
+      const response = await fetch(`/api/goals/${goalId}/self-assessment`);
+      if (!response.ok) {
+        console.warn(`Nie udało się pobrać samooceny dla celu ${goalId}`);
+        return null;
+      }
+
+      const data = await response.json();
+      console.log(`Pobrano samoocenę dla celu ${goalId}:`, data);
+
+      // API może zwracać dane w różnych formatach, obsłużmy kilka możliwości
+      if (data.rating !== undefined) {
+        // Format { rating: number, comments: string }
+        return {
+          rating: data.rating,
+          comment: data.comments || data.comment || "",
+        };
+      } else if (data.selfAssessment && data.selfAssessment.rating !== undefined) {
+        // Format { selfAssessment: { rating: number, comments: string } }
+        return {
+          rating: data.selfAssessment.rating,
+          comment: data.selfAssessment.comments || data.selfAssessment.comment || "",
+        };
+      } else if (data.data && data.data.rating !== undefined) {
+        // Format { data: { rating: number, comments: string } }
+        return {
+          rating: data.data.rating,
+          comment: data.data.comments || data.data.comment || "",
+        };
+      }
+
+      console.warn(`Nieznany format odpowiedzi API dla celu ${goalId}:`, data);
+      return null;
+    } catch (err) {
+      console.error(`Błąd podczas pobierania samooceny dla celu ${goalId}:`, err);
+      return null;
+    }
+  };
+
   // Pobieranie celów z API
   const reload = useCallback(async () => {
     if (!processId || !employeeId) {
@@ -73,16 +114,40 @@ export function useGoals({ processId, employeeId }: UseGoalsProps): UseGoalsResu
       // eslint-disable-next-line no-console
       console.log("API status:", apiStatus, "canEdit:", apiStatus === "in_self_assessment");
 
-      // Transformacja DTO na ViewModel
-      const goalsViewModel = data.goals.map((goal: GoalWithSelfAssessmentDTO) => ({
+      // Transformacja DTO na ViewModel (bez samoocen)
+      const goalsViewModel = data.goals.map((goal: GoalDTO) => ({
         ...goal,
         formattedWeight: `${goal.weight}%`,
         isReadOnly: apiStatus !== "in_self_assessment", // Edycja tylko dla statusu in_self_assessment
-        selfAssessment: goal.selfAssessment, // Używamy danych z API
       }));
 
       setGoals(goalsViewModel);
       setTotalWeight(data.totalWeight);
+
+      // Pobierz samooceny dla każdego celu osobno z właściwego endpointu API
+      if (data.goals.length > 0) {
+        setIsLoading(true); // Kontynuuj stan ładowania podczas pobierania samoocen
+        const updatedGoals = [...goalsViewModel];
+
+        // Dla każdego celu pobierz samoocenę
+        for (let i = 0; i < updatedGoals.length; i++) {
+          const goal = updatedGoals[i];
+          const selfAssessment = await fetchSelfAssessment(goal.id);
+
+          if (selfAssessment) {
+            updatedGoals[i] = {
+              ...goal,
+              selfAssessment: {
+                rating: selfAssessment.rating,
+                comment: selfAssessment.comment || "",
+              },
+            };
+          }
+        }
+
+        console.log("Goals with fetched self-assessments:", updatedGoals);
+        setGoals(updatedGoals);
+      }
     } catch (err) {
       // eslint-disable-next-line no-console
       console.error("Błąd pobierania celów:", err);
@@ -123,12 +188,12 @@ export function useGoals({ processId, employeeId }: UseGoalsProps): UseGoalsResu
 
       try {
         // Wywołanie API
-        const response = await fetch(`/api/assessment-processes/${processId}/goals/${goalId}/self-assessment`, {
+        const response = await fetch(`/api/goals/${goalId}/self-assessment`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ rating, comment }),
+          body: JSON.stringify({ rating, comments: comment }),
         });
 
         // Jeśli API zwraca błąd, wyświetlamy komunikat i używamy danych lokalnych

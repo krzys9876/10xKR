@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -14,6 +14,25 @@ export function SelfAssessmentForm({
   const [rating, setRating] = useState<number | undefined>(initialRating);
   const [comment, setComment] = useState(initialComment || "");
   const [error, setError] = useState<string | null>(null);
+
+  // Log initial values for debugging
+  useEffect(() => {
+    console.log(`SelfAssessmentForm for goal ${goalId}:`, {
+      initialRating,
+      initialComment,
+      currentRating: rating,
+    });
+  }, [goalId, initialRating, initialComment, rating]);
+
+  // Update state when props change
+  useEffect(() => {
+    if (initialRating !== undefined) {
+      setRating(initialRating);
+    }
+    if (initialComment !== undefined) {
+      setComment(initialComment);
+    }
+  }, [initialRating, initialComment]);
 
   const handleRatingChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseInt(e.target.value, 10);
@@ -62,7 +81,7 @@ export function SelfAssessmentForm({
             type="number"
             min={0}
             max={150}
-            value={rating || ""}
+            value={rating ?? ""}
             onChange={handleRatingChange}
             disabled={isSaving}
             className="w-full"
