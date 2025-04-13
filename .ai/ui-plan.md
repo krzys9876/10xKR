@@ -72,37 +72,28 @@ Główny przepływ jest podzielony na etapy odpowiadające statusom procesu ocen
   - Komunikaty walidacji jako pop-upy
   - Automatyczne zapisywanie zmian
 
-### Przeglądanie celów (Widok pracownika, tryb tylko do odczytu)
+### Przeglądanie celów i samoocena (Widok pracownika)
 
-- **Ścieżka widoku:** `/process/{processId}/goals-view`
-- **Główny cel:** Umożliwienie pracownikowi przeglądania przypisanych celów przed etapem samooceny
+- **Ścieżka widoku:** `/process/{processId}/goals`
+- **Główny cel:** Umożliwienie pracownikowi przeglądania przypisanych celów oraz wprowadzania samooceny (gdy status procesu na to pozwala)
 - **Kluczowe informacje do wyświetlenia:**
-  - Status procesu: "w definiowaniu"
+  - Status procesu (dynamicznie wyświetlany)
   - Lista przypisanych celów z kategoriami i wagami
-- **Kluczowe komponenty widoku:**
-  - Stepper procesu oceny z wyróżnionym aktualnym statusem
-  - Lista celów w trybie tylko do odczytu (opis, kategoria, waga)
-- **Względy UX, dostępności i bezpieczeństwa:**
-  - Informacja o trybie tylko do odczytu
-  - Informacja o oczekiwaniu na przejście do etapu samooceny
-
-### Samoocena (Widok pracownika)
-
-- **Ścieżka widoku:** `/process/{processId}/self-assessment`
-- **Główny cel:** Umożliwienie pracownikowi dokonania samooceny realizacji celów
-- **Kluczowe informacje do wyświetlenia:**
-  - Status procesu: "w samoocenie"
-  - Lista celów z możliwością wprowadzenia oceny i komentarza
+  - Pola samooceny (widoczne i edytowalne tylko w statusie "in_self_assessment")
 - **Kluczowe komponenty widoku:**
   - Stepper procesu oceny z wyróżnionym aktualnym statusem
   - Lista celów (opis, kategoria, waga)
-  - Pole numeryczne do wprowadzenia oceny (0-150) dla każdego celu
-  - Pole tekstowe na komentarz dla każdego celu
+  - Kondycjonalnie wyświetlane elementy samooceny (tylko dla statusu "in_self_assessment"):
+    - Pole numeryczne do wprowadzenia oceny (0-150) dla każdego celu
+    - Pole tekstowe na komentarz dla każdego celu
+    - Przycisk zapisania samooceny
   - Automatyczne zapisywanie po każdej zmianie
 - **Względy UX, dostępności i bezpieczeństwa:**
+  - Wyraźne oznaczenie, czy samoocena jest dostępna czy nie
   - Walidacja zakresu oceny (0-150)
   - Komunikaty walidacji jako pop-upy
   - Automatyczne zapisywanie zmian
+  - Tryb tylko do odczytu, gdy status procesu inny niż "in_self_assessment"
 
 ### Ocena kierownika
 
@@ -192,21 +183,19 @@ Główny przepływ jest podzielony na etapy odpowiadające statusom procesu ocen
    - Przeglądanie dostępnych procesów oceny
    - Wybór aktywnego procesu oceny
 
-3. **Etap definiowania celów** (status: "w definiowaniu")
-   - Przeglądanie przypisanych celów w trybie tylko do odczytu
+3. **Zintegrowany widok celów i samooceny**
+   - Status "w definiowaniu": Przeglądanie przypisanych celów w trybie tylko do odczytu
+   - Status "w samoocenie": Przeglądanie celów i wprowadzanie samooceny (pola samooceny są dostępne)
+   - Zapisywanie samooceny
 
-4. **Etap samooceny** (status: "w samoocenie")
-   - Wprowadzanie samooceny dla każdego celu
-   - Dodawanie komentarzy
-
-5. **Etap oceny kierownika** (status: "w ocenie kierownika")
+4. **Etap oceny kierownika** (status: "w ocenie kierownika")
    - Przeglądanie samooceny w trybie tylko do odczytu
    - Oczekiwanie na ocenę kierownika
 
-6. **Etap podsumowania** (status: "zakończony")
+5. **Etap podsumowania** (status: "zakończony")
    - Przeglądanie porównawczego zestawienia ocen
 
-7. **Powrót do dashboardu**
+6. **Powrót do dashboardu**
    - Wybór innego procesu oceny
 
 ## 4. Układ i struktura nawigacji
@@ -229,9 +218,9 @@ Zawartość i dostępność widoków zależy od:
 - Statusu procesu oceny
 
 Dla **pracownika**:
-- Status "w definiowaniu" → Widok przeglądania celów (tylko do odczytu)
-- Status "w samoocenie" → Widok samooceny
-- Status "w ocenie kierownika" → Widok przeglądania samooceny (tylko do odczytu)
+- Status "w definiowaniu" → Widok celów (tylko do odczytu)
+- Status "w samoocenie" → Widok celów z dostępnymi polami samooceny
+- Status "w ocenie kierownika" → Widok celów z samoocenami (tylko do odczytu)
 - Status "zakończony" → Widok porównawczy
 
 Dla **kierownika**:
@@ -278,11 +267,12 @@ W nagłówku aplikacji znajduje się przycisk powrotu do dashboardu oraz opcja w
 ### 4. Formularz oceny
 
 - **Opis:** Komponent umożliwiający wprowadzenie oceny (0-150) i komentarza.
-- **Zastosowanie:** Widok samooceny, widok oceny kierownika.
+- **Zastosowanie:** Zintegrowany widok celów i samooceny (gdy status: "w samoocenie"), widok oceny kierownika.
 - **Funkcjonalność:**
   - Pole numeryczne na ocenę (0-150)
   - Pole tekstowe na komentarz
   - Walidacja zakresu oceny
+  - Kondycjonalne wyświetlanie (tylko w odpowiednim statusie procesu)
 
 ### 5. Widok porównawczy ocen
 
