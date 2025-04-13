@@ -61,14 +61,12 @@ Główny przepływ jest podzielony na etapy odpowiadające statusom procesu ocen
   - Stepper procesu oceny z wyróżnionym aktualnym statusem
   - Formularz dodawania/edycji celu:
     - Pole tekstowe na opis celu
-    - Przycisk wyboru z predefiniowanych celów (otwierający modal)
     - Lista rozwijana kategorii
     - Pole numeryczne na wagę (%)
   - Lista dodanych celów
   - Wizualizacja sumy wag (progress bar)
   - Przycisk usuwania celu
   - Przycisk zmiany statusu procesu na "w samoocenie"
-  - Modal z predefiniowanymi celami
 - **Względy UX, dostępności i bezpieczeństwa:**
   - Automatyczna walidacja sumy wag (100%)
   - Komunikaty walidacji jako pop-upy
@@ -162,7 +160,7 @@ Główny przepływ jest podzielony na etapy odpowiadające statusom procesu ocen
    - Wybór pracownika do oceny
 
 4. **Etap definiowania celów** (status: "w definiowaniu")
-   - Dodawanie celów (ręcznie lub z predefiniowanych)
+   - Dodawanie celów ręcznie
    - Przypisywanie kategorii i wag
    - Walidacja sumy wag (100%)
    - Zmiana statusu procesu na "w samoocenie"
@@ -263,7 +261,6 @@ W nagłówku aplikacji znajduje się przycisk powrotu do dashboardu oraz opcja w
 - **Zastosowanie:** Widok definiowania celów.
 - **Funkcjonalność:**
   - Pole tekstowe na opis celu
-  - Przycisk wyboru z predefiniowanych celów
   - Lista rozwijana kategorii
   - Pole numeryczne na wagę (%)
   - Przyciski zapisu i anulowania
@@ -292,15 +289,6 @@ W nagłówku aplikacji znajduje się przycisk powrotu do dashboardu oraz opcja w
 - **Opis:** Zestawienie samooceny pracownika i oceny kierownika obok siebie.
 - **Zastosowanie:** Widok porównawczy.
 - **Funkcjonalność:** Wyświetlanie obu ocen i komentarzy dla każdego celu.
-
-### 6. Modal wyboru predefiniowanych celów
-
-- **Opis:** Okno modalne z listą predefiniowanych celów do wyboru.
-- **Zastosowanie:** Widok definiowania celów.
-- **Funkcjonalność:**
-  - Lista predefiniowanych celów pogrupowana według kategorii
-  - Wyszukiwarka
-  - Możliwość wyboru (dodania) celu
 
 ### 7. Komunikaty walidacji
 
