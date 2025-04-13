@@ -10,6 +10,12 @@ if (!processId) {
   return Astro.redirect("/dashboard");
 }
 
+// Helper function to create absolute URLs
+const createApiUrl = (path: string) => {
+  const origin = Astro.url.origin;
+  return new URL(path, origin).toString();
+};
+
 // Pobranie danych procesu z API
 let process;
 let employee;
@@ -17,7 +23,7 @@ let currentUser;
 
 try {
   // Pobierz informacje o zalogowanym użytkowniku
-  const userResponse = await fetch(`/api/auth/me`, {
+  const userResponse = await fetch(createApiUrl(`/api/auth/me`), {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
@@ -34,7 +40,7 @@ try {
   currentUser = await userResponse.json();
 
   // Pobierz informacje o procesie
-  const processResponse = await fetch(`/api/assessment-processes/${processId}`, {
+  const processResponse = await fetch(createApiUrl(`/api/assessment-processes/${processId}`), {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
@@ -69,7 +75,7 @@ try {
 
   if (employeeId !== currentUser.id) {
     // Pobierz informacje o pracowniku, jeśli to nie jest bieżący użytkownik
-    const employeeResponse = await fetch(`/api/users/${employeeId}`, {
+    const employeeResponse = await fetch(createApiUrl(`/api/users/${employeeId}`), {
       method: "GET",
       headers: {
         "Content-Type": "application/json",

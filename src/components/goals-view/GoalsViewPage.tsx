@@ -3,6 +3,8 @@ import { GoalsList } from "./GoalsList";
 import { useGoals } from "./hooks/useGoals";
 import type { AssessmentProcessViewModel } from "@/types";
 import { useEffect, useState } from "react";
+import { Button } from "../ui/button";
+import { ArrowLeft } from "lucide-react";
 
 interface GoalsViewPageProps {
   processId: string;
@@ -74,6 +76,14 @@ export function GoalsViewPage({ processId, employeeId, process }: GoalsViewPageP
 
   return (
     <div className="container mx-auto px-4 py-6">
+      <div className="flex items-center mb-4">
+        <Button variant="ghost" size="sm" className="flex items-center gap-1" asChild>
+          <a href="/dashboard">
+            <ArrowLeft className="h-4 w-4" /> Powrót do dashboardu
+          </a>
+        </Button>
+      </div>
+
       {process && (
         <div className="mb-6">
           <h1 className="text-2xl font-bold mb-4">{process.name}</h1>
