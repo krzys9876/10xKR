@@ -29,8 +29,8 @@ export const GET: APIRoute = async ({ locals }) => {
     const userId = user.id;
 
     // Add debug logging
-    // eslint-disable-next-line no-console
-    console.log("Attempting to find user with ID:", userId);
+    // xxx eslint-disable-next-line no-console
+    //console.log("Attempting to find user with ID:", userId);
 
     // Get additional user information from the users table
     const { data: userData, error: profileError } = await supabase
