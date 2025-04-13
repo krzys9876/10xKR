@@ -10,14 +10,17 @@ import type {
   DashboardViewModel,
   UserDTO,
   UserViewModel,
+  EmployeeDTO,
 } from "../../types";
 import { ProcessCard } from "./ProcessCard";
+import { EmployeeList } from "./EmployeeList";
 
 // Custom hook for managing dashboard state
 interface UseDashboardResult {
   dashboardState: DashboardViewModel;
   fetchProcesses: (params?: AssessmentProcessFilterQueryParams) => Promise<void>;
   selectProcess: (process: AssessmentProcessViewModel) => void;
+  selectEmployee: (employee: EmployeeDTO) => void;
   logout: () => void;
 }
 
@@ -118,6 +121,15 @@ const useDashboard = (): UseDashboardResult => {
           isManager: Array.isArray(userDto.subordinates) && userDto.subordinates.length > 0,
         };
 
+        // Extract employees (subordinates) for managers
+        const employees: EmployeeDTO[] = Array.isArray(userDto.subordinates)
+          ? userDto.subordinates.map((sub) => ({
+              id: sub.id,
+              name: sub.name,
+              email: sub.email,
+            }))
+          : [];
+
         // Fetch manager data if managerId is available
         if (userDto.managerId) {
           try {
@@ -136,6 +148,7 @@ const useDashboard = (): UseDashboardResult => {
         setDashboardState((prev) => ({
           ...prev,
           user: userViewModel,
+          employees,
           isManager: userViewModel.isManager,
           isLoading: false,
         }));
@@ -163,6 +176,13 @@ const useDashboard = (): UseDashboardResult => {
     }));
   };
 
+  const selectEmployee = (employee: EmployeeDTO) => {
+    setDashboardState((prev) => ({
+      ...prev,
+      selectedEmployee: employee,
+    }));
+  };
+
   const logout = () => {
     // Clear user data from storage
     localStorage.removeItem("user");
@@ -176,13 +196,14 @@ const useDashboard = (): UseDashboardResult => {
     dashboardState,
     fetchProcesses,
     selectProcess,
+    selectEmployee,
     logout,
   };
 };
 
 export function DashboardView() {
-  const { dashboardState, logout, selectProcess } = useDashboard();
-  const { isLoading, error, processes, selectedProcess } = dashboardState;
+  const { dashboardState, logout, selectProcess, selectEmployee } = useDashboard();
+  const { isLoading, error, processes, employees, selectedProcess, selectedEmployee, isManager } = dashboardState;
 
   if (isLoading) {
     return <div className="p-4">Ładowanie danych...</div>;
@@ -196,23 +217,45 @@ export function DashboardView() {
     <div className="container mx-auto px-4 py-6">
       <UserProfileHeader user={dashboardState.user} onLogout={logout} />
 
-      {/* ProcessList component */}
-      <div className="mt-8">
-        <h2 className="text-2xl font-semibold mb-4">Procesy oceny</h2>
-        {isLoading ? (
-          <div className="bg-gray-50 p-4 rounded-md">Ładowanie procesów...</div>
-        ) : processes.length === 0 ? (
-          <div className="bg-gray-50 p-4 rounded-md text-gray-500">Brak dostępnych procesów oceny</div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {processes.map((process) => (
-              <ProcessCard
-                key={process.id}
-                process={process}
-                onClick={selectProcess}
-                isSelected={selectedProcess?.id === process.id}
-              />
-            ))}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
+        {/* ProcessList component */}
+        <div className="lg:col-span-2">
+          <h2 className="text-2xl font-semibold mb-4">Procesy oceny</h2>
+          {isLoading ? (
+            <div className="bg-gray-50 p-4 rounded-md">Ładowanie procesów...</div>
+          ) : processes.length === 0 ? (
+            <div className="bg-gray-50 p-4 rounded-md text-gray-500">Brak dostępnych procesów oceny</div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {processes.map((process) => (
+                <ProcessCard
+                  key={process.id}
+                  process={process}
+                  onClick={selectProcess}
+                  isSelected={selectedProcess?.id === process.id}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* EmployeeList for managers */}
+        {isManager && (
+          <div className="lg:col-span-1">
+            <EmployeeList
+              employees={employees}
+              totalCount={employees.length}
+              page={1}
+              limit={10}
+              onPageChange={(newPage: number) => {
+                // We're not implementing pagination in this step
+                // eslint-disable-next-line no-console
+                console.log("Page changed to:", newPage);
+              }}
+              onEmployeeSelect={selectEmployee}
+              selectedEmployeeId={selectedEmployee?.id}
+              isLoading={isLoading}
+            />
           </div>
         )}
       </div>
@@ -220,7 +263,10 @@ export function DashboardView() {
       {/* Display Process Stepper when a process is selected */}
       {selectedProcess && (
         <div className="mt-8 border-t pt-4">
-          <h2 className="text-xl font-semibold mb-2">Wybrany proces: {selectedProcess.name}</h2>
+          <h2 className="text-xl font-semibold mb-2">
+            Wybrany proces: {selectedProcess.name}
+            {selectedEmployee && ` - Pracownik: ${selectedEmployee.name}`}
+          </h2>
           <ProcessStepper currentStatus={selectedProcess.status} />
         </div>
       )}
