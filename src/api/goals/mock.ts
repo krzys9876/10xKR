@@ -1,7 +1,15 @@
 import type { GoalDTO } from "@/types";
 
+// Rozszerzony typ GoalDTO dla obsługi samooceny
+interface GoalWithSelfAssessmentDTO extends GoalDTO {
+  selfAssessment?: {
+    rating: number;
+    comment: string;
+  };
+}
+
 // Mockowe cele do testowania
-export const mockGoals: GoalDTO[] = [
+export const mockGoals: GoalWithSelfAssessmentDTO[] = [
   {
     id: "1",
     title: "[Przykład] Zwiększenie efektywności zespołu",
@@ -10,6 +18,10 @@ export const mockGoals: GoalDTO[] = [
     category: {
       id: "cat1",
       name: "Efektywność",
+    },
+    selfAssessment: {
+      rating: 120,
+      comment: "Przykładowy komentarz samooceny",
     },
   },
   {
@@ -38,4 +50,5 @@ export const mockGoals: GoalDTO[] = [
 export const mockGoalsResponse = {
   goals: mockGoals,
   totalWeight: 100,
+  processStatus: "in_self_assessment",
 };

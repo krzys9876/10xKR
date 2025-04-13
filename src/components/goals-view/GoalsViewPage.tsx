@@ -36,10 +36,17 @@ export function GoalsViewPage({ processId, employeeId, process }: GoalsViewPageP
     }
   }, [employeeId]);
 
-  const { goals, totalWeight, isLoading, error, reload } = useGoals({
-    processId,
-    employeeId: localEmployeeId,
-  });
+  const { goals, totalWeight, isLoading, error, reload, canEditSelfAssessment, saveSelfAssessment, isSaving } =
+    useGoals({
+      processId,
+      employeeId: localEmployeeId,
+    });
+
+  // Dla debugowania - wyświetl w konsoli czy samoocena jest dostępna
+  useEffect(() => {
+    console.log("canEditSelfAssessment:", canEditSelfAssessment);
+    console.log("saveSelfAssessment available:", !!saveSelfAssessment);
+  }, [canEditSelfAssessment, saveSelfAssessment]);
 
   // Pokazuj komunikat tylko, gdy nie jesteśmy w trakcie ładowania i nie mamy ID pracownika
   if (!localEmployeeId && !isLoadingUser) {
@@ -92,7 +99,14 @@ export function GoalsViewPage({ processId, employeeId, process }: GoalsViewPageP
       )}
 
       <div className="mt-8">
-        <GoalsList goals={goals} totalWeight={totalWeight} isLoading={fullIsLoading} />
+        <GoalsList
+          goals={goals}
+          totalWeight={totalWeight}
+          isLoading={fullIsLoading}
+          canEditSelfAssessment={canEditSelfAssessment}
+          saveSelfAssessment={saveSelfAssessment}
+          isSaving={isSaving}
+        />
       </div>
     </div>
   );

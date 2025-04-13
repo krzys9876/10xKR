@@ -10,6 +10,12 @@ export interface GoalViewModel {
   };
   formattedWeight: string; // "XX%" - dla prezentacji
   isReadOnly: boolean; // zawsze true dla tego widoku
+  selfAssessment?: {
+    rating: number;
+    comment: string;
+    isSaving?: boolean;
+    error?: string;
+  };
 }
 
 // Model widoku dla listy celów
@@ -18,6 +24,8 @@ export interface GoalsListViewModel {
   totalWeight: number;
   formattedTotalWeight: string; // "XX%" - dla prezentacji
   isComplete: boolean; // czy suma wag = 100%
+  processStatus?: string;
+  canEditSelfAssessment?: boolean;
 }
 
 // Hook props
@@ -34,6 +42,10 @@ export interface UseGoalsResult {
   error: string | null;
   reload: () => void; // Nazwa zgodna z konwencją istniejących hooków
   isComplete: boolean;
+  processStatus?: string;
+  canEditSelfAssessment?: boolean;
+  saveSelfAssessment?: (goalId: string, rating: number, comment: string) => Promise<void>;
+  isSaving?: Record<string, boolean>; // Stan zapisywania dla każdego celu
 }
 
 // Props dla komponentów
@@ -41,8 +53,30 @@ export interface GoalsListProps {
   goals: GoalViewModel[];
   totalWeight: number;
   isLoading: boolean;
+  processStatus?: string;
+  canEditSelfAssessment?: boolean;
+  saveSelfAssessment?: (goalId: string, rating: number, comment: string) => Promise<void>;
+  isSaving?: Record<string, boolean>;
 }
 
 export interface GoalCardProps {
   goal: GoalViewModel;
+  processStatus?: string;
+  canEditSelfAssessment?: boolean;
+  saveSelfAssessment?: (goalId: string, rating: number, comment: string) => Promise<void>;
+  isSaving?: boolean;
+}
+
+// Props dla formularza samooceny
+export interface SelfAssessmentFormProps {
+  goalId: string;
+  initialRating?: number;
+  initialComment?: string;
+  onSave: (goalId: string, rating: number, comment: string) => Promise<void>;
+  isSaving: boolean;
+}
+
+export interface SelfAssessmentDTO {
+  rating: number;
+  comment: string;
 }

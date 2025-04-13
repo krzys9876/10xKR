@@ -2,7 +2,14 @@ import React from "react";
 import type { GoalsListProps } from "./types";
 import { GoalCard } from "./GoalCard";
 
-export function GoalsList({ goals, totalWeight, isLoading }: GoalsListProps) {
+export function GoalsList({
+  goals,
+  totalWeight,
+  isLoading,
+  canEditSelfAssessment,
+  saveSelfAssessment,
+  isSaving,
+}: GoalsListProps) {
   if (isLoading) {
     return (
       <div className="py-4">
@@ -33,9 +40,21 @@ export function GoalsList({ goals, totalWeight, isLoading }: GoalsListProps) {
         </div>
       </div>
 
+      {canEditSelfAssessment && (
+        <div className="p-4 bg-blue-50 text-blue-700 rounded-md mb-4">
+          <p>Proces jest obecnie w etapie samooceny. Możesz wprowadzić samoocenę dla każdego celu.</p>
+        </div>
+      )}
+
       <div className="space-y-4">
         {goals.map((goal) => (
-          <GoalCard key={goal.id} goal={goal} />
+          <GoalCard
+            key={goal.id}
+            goal={goal}
+            canEditSelfAssessment={canEditSelfAssessment}
+            saveSelfAssessment={saveSelfAssessment}
+            isSaving={isSaving?.[goal.id]}
+          />
         ))}
       </div>
     </div>
