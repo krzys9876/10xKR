@@ -36,12 +36,14 @@ export const GET: APIRoute = async ({ request, locals }) => {
 
     // Parse and validate query parameters
     const url = new URL(request.url);
-    const validatedParams = assessmentProcessFilterSchema.safeParse({
-      status: url.searchParams.get("status"),
-      active: url.searchParams.get("active"),
-      page: url.searchParams.get("page"),
-      limit: url.searchParams.get("limit"),
-    });
+    const queryParams = {
+      status: url.searchParams.get("status") || undefined,
+      active: url.searchParams.has("active") ? url.searchParams.get("active") : undefined,
+      page: url.searchParams.get("page") || undefined,
+      limit: url.searchParams.get("limit") || undefined,
+    };
+
+    const validatedParams = assessmentProcessFilterSchema.safeParse(queryParams);
 
     if (!validatedParams.success) {
       return new Response(
