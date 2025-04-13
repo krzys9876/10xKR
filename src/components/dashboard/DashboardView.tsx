@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { UserProfileHeader } from "./UserProfileHeader";
-import type { DashboardViewModel, UserDTO } from "../../types";
+import type { DashboardViewModel, UserDTO, UserViewModel } from "../../types";
 
 // Custom hook for managing dashboard state
 interface UseDashboardResult {
@@ -48,10 +48,25 @@ const useDashboard = (): UseDashboardResult => {
         const userDto: UserDTO = await response.json();
 
         // Transform UserDTO to UserViewModel
-        const userViewModel = {
+        const userViewModel: UserViewModel = {
           ...userDto,
           isManager: Array.isArray(userDto.subordinates) && userDto.subordinates.length > 0,
         };
+
+        // Fetch manager data if managerId is available
+        if (userDto.managerId) {
+          try {
+            const managerResponse = await fetch(`/api/users/${userDto.managerId}`);
+            if (managerResponse.ok) {
+              const managerData: UserDTO = await managerResponse.json();
+              userViewModel.managerName = managerData.name;
+            }
+          } catch (managerError) {
+            // eslint-disable-next-line no-console
+            console.error("Error fetching manager data:", managerError);
+            // Continue without manager name rather than failing the whole process
+          }
+        }
 
         setDashboardState((prev) => ({
           ...prev,

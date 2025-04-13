@@ -35,6 +35,11 @@ export const UserProfileHeader: React.FC<UserProfileHeaderProps> = ({ user, onLo
               Kierownik
             </span>
           )}
+          {user.managerId && user.managerName && (
+            <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+              Kierownik: <span className="font-medium">{user.managerName}</span>
+            </div>
+          )}
         </div>
       </div>
 
