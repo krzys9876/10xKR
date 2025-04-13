@@ -1,0 +1,98 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import { GoalsViewPage } from "@/components/goals-view/GoalsViewPage";
+import { STATUS_LABELS } from "@/types";
+
+// Pobierz parametry z URL
+const { processId } = Astro.params;
+
+if (!processId) {
+  return Astro.redirect("/dashboard");
+}
+
+// Pobranie danych procesu z API
+let process;
+let employee;
+let currentUser;
+
+try {
+  // Pobierz informacje o zalogowanym użytkowniku
+  const userResponse = await fetch(`/api/auth/me`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      Cookie: Astro.request.headers.get("cookie") || "",
+    },
+    credentials: "include",
+  });
+
+  if (!userResponse.ok) {
+    return Astro.redirect("/login");
+  }
+
+  currentUser = await userResponse.json();
+
+  // Pobierz informacje o procesie
+  const processResponse = await fetch(`/api/assessment-processes/${processId}`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      Cookie: Astro.request.headers.get("cookie") || "",
+    },
+    credentials: "include",
+  });
+
+  if (!processResponse.ok) {
+    throw new Error("Nie udało się pobrać informacji o procesie");
+  }
+
+  process = await processResponse.json();
+
+  // Formatowanie danych procesu dla komponentu
+  const startDate = new Date(process.startDate);
+  const endDate = new Date(process.endDate);
+
+  process = {
+    ...process,
+    statusLabel:
+      STATUS_LABELS[
+        process.status as "in_definition" | "in_self_assessment" | "awaiting_manager_assessment" | "completed"
+      ],
+    formattedStartDate: startDate.toLocaleDateString("pl-PL"),
+    formattedEndDate: endDate.toLocaleDateString("pl-PL"),
+  };
+
+  // W przypadku kierownika, użyj employeeId z URL lub z parametrów
+  const employeeId = Astro.url.searchParams.get("employeeId") || currentUser.id;
+
+  if (employeeId !== currentUser.id) {
+    // Pobierz informacje o pracowniku, jeśli to nie jest bieżący użytkownik
+    const employeeResponse = await fetch(`/api/users/${employeeId}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        Cookie: Astro.request.headers.get("cookie") || "",
+      },
+      credentials: "include",
+    });
+
+    if (employeeResponse.ok) {
+      employee = await employeeResponse.json();
+    }
+  } else {
+    employee = currentUser;
+  }
+} catch (error) {
+  // Obsługa błędów zostanie przeprowadzona przez komponent React
+  console.error(error);
+}
+
+const title = `Cele - ${process?.name || "Proces oceny"}`;
+---
+
+<Layout title={title}>
+  <GoalsViewPage processId={processId} employeeId={employee?.id || ""} process={process} client:load />
+</Layout>

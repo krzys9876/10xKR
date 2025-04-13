@@ -263,10 +263,20 @@ export function DashboardView() {
       {/* Display Process Stepper when a process is selected */}
       {selectedProcess && (
         <div className="mt-8 border-t pt-4">
-          <h2 className="text-xl font-semibold mb-2">
-            Wybrany proces: {selectedProcess.name}
-            {selectedEmployee && ` - Pracownik: ${selectedEmployee.name}`}
-          </h2>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-semibold">
+              Wybrany proces: {selectedProcess.name}
+              {selectedEmployee && ` - Pracownik: ${selectedEmployee.name}`}
+            </h2>
+            <div className="flex gap-2">
+              <a
+                href={`/process/${selectedProcess.id}/goals-view${selectedEmployee ? `?employeeId=${selectedEmployee.id}` : ""}`}
+                className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors text-sm"
+              >
+                Przeglądaj cele
+              </a>
+            </div>
+          </div>
           <ProcessStepper currentStatus={selectedProcess.status} />
         </div>
       )}
