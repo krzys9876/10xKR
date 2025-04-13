@@ -106,24 +106,6 @@ Główny przepływ jest podzielony na etapy odpowiadające statusom procesu ocen
   - Komunikaty walidacji jako pop-upy
   - Automatyczne zapisywanie zmian
 
-### Widok oczekiwania na samoocenę (Widok kierownika)
-
-- **Ścieżka widoku:** `/process/{processId}/employee/{employeeId}/awaiting-self-assessment`
-- **Główny cel:** Informowanie kierownika o trwającym etapie samooceny przez pracownika
-- **Kluczowe informacje do wyświetlenia:**
-  - Dane pracownika (imię, nazwisko)
-  - Status procesu: "w samoocenie"
-  - Informacja o oczekiwaniu na samoocenę
-  - Lista celów pracownika
-- **Kluczowe komponenty widoku:**
-  - Stepper procesu oceny z wyróżnionym aktualnym statusem
-  - Lista celów w trybie tylko do odczytu
-  - Status samooceny (ukończona/w trakcie)
-  - Przycisk zmiany statusu procesu na "w ocenie kierownika" (aktywny tylko gdy samoocena jest ukończona)
-- **Względy UX, dostępności i bezpieczeństwa:**
-  - Wyraźna informacja o stanie samooceny
-  - Przycisk zmiany statusu dezaktywowany do czasu ukończenia samooceny
-
 ### Ocena kierownika
 
 - **Ścieżka widoku:** `/process/{processId}/employee/{employeeId}/manager-assessment`
