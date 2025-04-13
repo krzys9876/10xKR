@@ -31,10 +31,9 @@ Głównym problemem jest brak narzędzia umożliwiającego efektywne definiowani
 ## 5. Historyjki użytkowników
 - US-001
   - Tytuł: Definiowanie celu przez kierownika
-  - Opis: Jako kierownik chcę dodać cel pracownikowi poprzez ręczne wpisanie lub wybór z listy predefiniowanych propozycji, aby zapewnić jasność i przejrzystość celów.
+  - Opis: Jako kierownik chcę dodać cel pracownikowi, aby zapewnić jasność i przejrzystość celów.
   - Kryteria akceptacji:
     - Możliwość ręcznego wpisania treści celu.
-    - Opcja wyboru celu z listy predefiniowanych propozycji.
     - Wprowadzenie wagi (w procentach) oraz wyboru kategorii dla celu.
     - Walidacja, która upewnia się, że suma wag wszystkich celów wynosi 100%.
 
