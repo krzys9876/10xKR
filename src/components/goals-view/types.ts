@@ -26,6 +26,11 @@ export interface GoalsListViewModel {
   isComplete: boolean; // czy suma wag = 100%
   processStatus?: string;
   canEditSelfAssessment?: boolean;
+  employee?: {
+    id: string;
+    name: string;
+    email: string;
+  };
 }
 
 // Hook props
@@ -46,6 +51,11 @@ export interface UseGoalsResult {
   canEditSelfAssessment?: boolean;
   saveSelfAssessment?: (goalId: string, rating: number, comment: string) => Promise<void>;
   isSaving?: Record<string, boolean>; // Stan zapisywania dla każdego celu
+  employee?: {
+    id: string;
+    name: string;
+    email: string;
+  }; // Informacje o pracowniku
 }
 
 // Props dla komponentów
@@ -57,6 +67,11 @@ export interface GoalsListProps {
   canEditSelfAssessment?: boolean;
   saveSelfAssessment?: (goalId: string, rating: number, comment: string) => Promise<void>;
   isSaving?: Record<string, boolean>;
+  employee?: {
+    id: string;
+    name: string;
+    email: string;
+  }; // Informacje o pracowniku
 }
 
 export interface GoalCardProps {

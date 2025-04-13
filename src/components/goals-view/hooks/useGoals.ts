@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import type { UseGoalsProps, UseGoalsResult, GoalViewModel } from "../types";
-import type { AssessmentProcessStatus, GoalDTO } from "@/types";
+import type { AssessmentProcessStatus, EmployeeDTO, GoalDTO } from "@/types";
 import { mockGoalsResponse } from "@/api/goals/mock";
 
 // Extended type for GoalDTO with selfAssessment
@@ -18,9 +18,37 @@ export function useGoals({ processId, employeeId }: UseGoalsProps): UseGoalsResu
   const [error, setError] = useState<string | null>(null);
   const [processStatus, setProcessStatus] = useState<AssessmentProcessStatus>("in_self_assessment"); // Default to in_self_assessment for testing
   const [isSaving, setIsSaving] = useState<Record<string, boolean>>({});
+  const [employee, setEmployee] = useState<EmployeeDTO | null>(null);
 
   // Czy można edytować samoocenę (tylko dla statusu "in_self_assessment")
   const canEditSelfAssessment = processStatus === "in_self_assessment";
+
+  // Pomocnicza funkcja do pobierania danych pracownika
+  const fetchEmployeeData = async (empId: string) => {
+    try {
+      const response = await fetch(`/api/users/${empId}`);
+      if (!response.ok) {
+        // eslint-disable-next-line no-console
+        console.warn(`Nie udało się pobrać danych pracownika ${empId}`);
+        return null;
+      }
+
+      const userData = await response.json();
+      // eslint-disable-next-line no-console
+      console.log(`Pobrano dane pracownika ${empId}:`, userData);
+
+      // Zwracamy tylko podstawowe dane pracownika
+      return {
+        id: userData.id,
+        name: userData.name,
+        email: userData.email,
+      };
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error(`Błąd podczas pobierania danych pracownika ${empId}:`, err);
+      return null;
+    }
+  };
 
   // Pomocnicza funkcja do pobierania samooceny dla pojedynczego celu
   const fetchSelfAssessment = async (goalId: string) => {
@@ -77,6 +105,20 @@ export function useGoals({ processId, employeeId }: UseGoalsProps): UseGoalsResu
 
     setIsLoading(true);
     setError(null);
+
+    // Pobierz dane pracownika
+    const employeeData = await fetchEmployeeData(employeeId);
+    if (employeeData) {
+      setEmployee(employeeData);
+    } else {
+      // Ustawiamy podstawowe dane pracownika, jeśli nie udało się ich pobrać
+      setEmployee({
+        id: employeeId,
+        name: "Nieznany pracownik",
+        email: "",
+      });
+    }
+
     try {
       // Wywołanie API
       const response = await fetch(`/api/assessment-processes/${processId}/employees/${employeeId}/goals`);
@@ -200,7 +242,7 @@ export function useGoals({ processId, employeeId }: UseGoalsProps): UseGoalsResu
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ rating, comments: comment }),
+          body: JSON.stringify({ rating, comments: comment }), // Używamy "comments" zamiast "comment"
         });
 
         // Jeśli API zwraca błąd, wyświetlamy komunikat i używamy danych lokalnych
@@ -283,5 +325,6 @@ export function useGoals({ processId, employeeId }: UseGoalsProps): UseGoalsResu
     canEditSelfAssessment,
     saveSelfAssessment,
     isSaving,
+    employee: employee ?? undefined,
   };
 }

@@ -4,7 +4,7 @@ import { useGoals } from "./hooks/useGoals";
 import type { AssessmentProcessViewModel } from "@/types";
 import { useEffect, useState } from "react";
 import { Button } from "../ui/button";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, User } from "lucide-react";
 
 interface GoalsViewPageProps {
   processId: string;
@@ -36,11 +36,20 @@ export function GoalsViewPage({ processId, employeeId, process }: GoalsViewPageP
     }
   }, [employeeId]);
 
-  const { goals, totalWeight, isLoading, error, reload, canEditSelfAssessment, saveSelfAssessment, isSaving } =
-    useGoals({
-      processId,
-      employeeId: localEmployeeId,
-    });
+  const {
+    goals,
+    totalWeight,
+    isLoading,
+    error,
+    reload,
+    canEditSelfAssessment,
+    saveSelfAssessment,
+    isSaving,
+    employee,
+  } = useGoals({
+    processId,
+    employeeId: localEmployeeId,
+  });
 
   // Dla debugowania - wyświetl w konsoli czy samoocena jest dostępna
   useEffect(() => {
@@ -48,7 +57,9 @@ export function GoalsViewPage({ processId, employeeId, process }: GoalsViewPageP
     console.log("canEditSelfAssessment:", canEditSelfAssessment);
     // eslint-disable-next-line no-console
     console.log("saveSelfAssessment available:", !!saveSelfAssessment);
-  }, [canEditSelfAssessment, saveSelfAssessment]);
+    // eslint-disable-next-line no-console
+    console.log("employee:", employee);
+  }, [canEditSelfAssessment, saveSelfAssessment, employee]);
 
   // Pokazuj komunikat tylko, gdy nie jesteśmy w trakcie ładowania i nie mamy ID pracownika
   if (!localEmployeeId && !isLoadingUser) {
@@ -100,7 +111,22 @@ export function GoalsViewPage({ processId, employeeId, process }: GoalsViewPageP
         </div>
       )}
 
-      <div className="mt-8">
+      {/* Informacje o pracowniku */}
+      {employee && (
+        <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200 dark:bg-gray-800 dark:border-gray-700">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+              <User className="w-5 h-5" />
+            </div>
+            <div>
+              <h2 className="text-lg font-medium">{employee.name}</h2>
+              {employee.email && <p className="text-sm text-gray-500 dark:text-gray-400">{employee.email}</p>}
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="mt-4">
         <GoalsList
           goals={goals}
           totalWeight={totalWeight}
@@ -108,6 +134,7 @@ export function GoalsViewPage({ processId, employeeId, process }: GoalsViewPageP
           canEditSelfAssessment={canEditSelfAssessment}
           saveSelfAssessment={saveSelfAssessment}
           isSaving={isSaving}
+          employee={employee || undefined}
         />
       </div>
     </div>
