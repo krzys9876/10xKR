@@ -38,6 +38,7 @@ Główny przepływ jest podzielony na etapy odpowiadające statusom procesu ocen
   - Informacje o zalogowanym użytkowniku
   - Lista dostępnych procesów oceny
   - (Dla kierownika) Lista pracowników
+  - (Dla kierownika) zmiana statusu procesu
 - **Kluczowe komponenty widoku:**
   - Nagłówek z nazwą użytkownika i przyciskiem wylogowania
   - Karty procesów oceny (nazwa, data rozpoczęcia/zakończenia, status)
