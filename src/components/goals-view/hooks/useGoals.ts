@@ -19,9 +19,37 @@ export function useGoals({ processId, employeeId }: UseGoalsProps): UseGoalsResu
   const [processStatus, setProcessStatus] = useState<AssessmentProcessStatus>("in_self_assessment"); // Default to in_self_assessment for testing
   const [isSaving, setIsSaving] = useState<Record<string, boolean>>({});
   const [employee, setEmployee] = useState<EmployeeDTO | null>(null);
+  const [currentUser, setCurrentUser] = useState<EmployeeDTO | null>(null);
+  const [isViewingOwnGoals, setIsViewingOwnGoals] = useState<boolean>(true);
 
-  // Czy można edytować samoocenę (tylko dla statusu "in_self_assessment")
-  const canEditSelfAssessment = processStatus === "in_self_assessment";
+  // Czy można edytować samoocenę (tylko dla statusu "in_self_assessment" i tylko gdy użytkownik przegląda własne cele)
+  const canEditSelfAssessment = processStatus === "in_self_assessment" && isViewingOwnGoals;
+
+  // Pomocnicza funkcja do pobierania danych o zalogowanym użytkowniku
+  const fetchCurrentUser = async () => {
+    try {
+      const response = await fetch(`/api/auth/me`);
+      if (!response.ok) {
+        // eslint-disable-next-line no-console
+        console.warn(`Nie udało się pobrać danych zalogowanego użytkownika`);
+        return null;
+      }
+
+      const userData = await response.json();
+      // eslint-disable-next-line no-console
+      console.log(`Pobrano dane zalogowanego użytkownika:`, userData);
+
+      return {
+        id: userData.id,
+        name: userData.name || userData.email,
+        email: userData.email,
+      };
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error(`Błąd podczas pobierania danych zalogowanego użytkownika:`, err);
+      return null;
+    }
+  };
 
   // Pomocnicza funkcja do pobierania danych pracownika
   const fetchEmployeeData = async (empId: string) => {
@@ -105,6 +133,16 @@ export function useGoals({ processId, employeeId }: UseGoalsProps): UseGoalsResu
 
     setIsLoading(true);
     setError(null);
+
+    // Pobierz dane zalogowanego użytkownika
+    const loggedInUser = await fetchCurrentUser();
+    if (loggedInUser) {
+      setCurrentUser(loggedInUser);
+      // Sprawdź, czy użytkownik przegląda własne cele czy cele innego pracownika
+      setIsViewingOwnGoals(loggedInUser.id === employeeId);
+      // eslint-disable-next-line no-console
+      console.log(`Czy użytkownik przegląda własne cele: ${loggedInUser.id === employeeId}`);
+    }
 
     // Pobierz dane pracownika
     const employeeData = await fetchEmployeeData(employeeId);
@@ -227,7 +265,7 @@ export function useGoals({ processId, employeeId }: UseGoalsProps): UseGoalsResu
   // Funkcja do zapisywania samooceny
   const saveSelfAssessment = useCallback(
     async (goalId: string, rating: number, comment: string) => {
-      // Tylko dla statusu "in_self_assessment"
+      // Tylko dla statusu "in_self_assessment" i tylko dla własnych celów
       if (!canEditSelfAssessment) {
         return;
       }
