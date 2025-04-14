@@ -54,15 +54,15 @@ export interface GoalCardProps {
 }
 
 export interface GoalFormProps {
-  initialValues?: {
+  initialValues: {
     id?: string;
     description: string;
     categoryId: string;
     weight: number;
   };
-  categories: { id: string; name: string }[];
+  categories: GoalCategoryDTO[];
   totalWeight: number;
-  currentGoalWeight: number; // W przypadku edycji, obecna waga celu
+  currentGoalWeight: number; // Current weight in case of edit
   onSave: (goal: { description: string; categoryId: string; weight: number; id?: string }) => Promise<void>;
   onCancel: () => void;
   isSaving: boolean;
@@ -71,6 +71,7 @@ export interface GoalFormProps {
 // Hook props i rezultaty
 export interface UseGoalsDefinitionProps {
   processId: string;
+  employeeId: string;
 }
 
 export interface UseGoalsDefinitionResult {
@@ -82,8 +83,8 @@ export interface UseGoalsDefinitionResult {
   isComplete: boolean; // czy suma wag = 100%
   processStatus: AssessmentProcessStatus;
   isManager: boolean;
-  addGoal: (goal: { description: string; categoryId: string; weight: number }) => Promise<void>;
-  updateGoal: (goalId: string, goal: { description: string; categoryId: string; weight: number }) => Promise<void>;
+  addGoal: (goal: CreateGoalCommand) => Promise<GoalDTO>;
+  updateGoal: (goalId: string, goal: UpdateGoalCommand) => Promise<GoalDTO>;
   deleteGoal: (goalId: string) => Promise<void>;
   updateProcessStatus: (status: AssessmentProcessStatus) => Promise<void>;
   isSaving: boolean;
