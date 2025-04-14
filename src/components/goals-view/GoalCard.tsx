@@ -3,8 +3,17 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import type { GoalCardProps } from "./types";
 import { SelfAssessmentForm } from "./SelfAssessmentForm";
+import { ManagerAssessmentForm } from "./ManagerAssessmentForm";
 
-export function GoalCard({ goal, canEditSelfAssessment, saveSelfAssessment, isSaving }: GoalCardProps) {
+export function GoalCard({
+  goal,
+  canEditSelfAssessment,
+  saveSelfAssessment,
+  isSaving,
+  canEditManagerAssessment,
+  saveManagerAssessment,
+  isSavingManagerAssessment,
+}: GoalCardProps) {
   // Log self-assessment data for debugging
   useEffect(() => {
     if (goal.selfAssessment) {
@@ -13,6 +22,15 @@ export function GoalCard({ goal, canEditSelfAssessment, saveSelfAssessment, isSa
     } else {
       // eslint-disable-next-line no-console
       console.log(`GoalCard ${goal.id} has NO self-assessment data`);
+    }
+
+    // Log manager-assessment data for debugging
+    if (goal.managerAssessment) {
+      // eslint-disable-next-line no-console
+      console.log(`GoalCard ${goal.id} has manager-assessment:`, goal.managerAssessment);
+    } else {
+      // eslint-disable-next-line no-console
+      console.log(`GoalCard ${goal.id} has NO manager-assessment data`);
     }
   }, [goal]);
 
@@ -54,6 +72,37 @@ export function GoalCard({ goal, canEditSelfAssessment, saveSelfAssessment, isSa
                 <div>
                   <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400">Komentarz</h4>
                   <p className="text-sm">{goal.selfAssessment.comment}</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Formularz oceny kierownika - wyświetlany tylko gdy jest dostępna funkcja saveManagerAssessment */}
+        {saveManagerAssessment && (
+          <ManagerAssessmentForm
+            goalId={goal.id}
+            initialRating={goal.managerAssessment?.rating}
+            initialComment={goal.managerAssessment?.comment}
+            onSave={saveManagerAssessment}
+            isSaving={!!isSavingManagerAssessment}
+            canEdit={!!canEditManagerAssessment}
+          />
+        )}
+
+        {/* Wyświetlenie oceny kierownika (tylko do odczytu) gdy nie jest dostępna funkcja saveManagerAssessment, ale jest dostępna ocena */}
+        {!saveManagerAssessment && goal.managerAssessment && (
+          <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+            <div className="space-y-3">
+              <div>
+                <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400">Ocena kierownika</h4>
+                <p className="text-lg font-medium">{goal.managerAssessment.rating}/150</p>
+              </div>
+
+              {goal.managerAssessment.comment && (
+                <div>
+                  <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400">Komentarz kierownika</h4>
+                  <p className="text-sm">{goal.managerAssessment.comment}</p>
                 </div>
               )}
             </div>

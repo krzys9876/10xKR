@@ -16,6 +16,13 @@ export interface GoalViewModel {
     isSaving?: boolean;
     error?: string;
   };
+  // Dodanie informacji o ocenie kierownika
+  managerAssessment?: {
+    rating: number;
+    comment: string;
+    isSaving?: boolean;
+    error?: string;
+  };
 }
 
 // Model widoku dla listy celów
@@ -26,6 +33,7 @@ export interface GoalsListViewModel {
   isComplete: boolean; // czy suma wag = 100%
   processStatus?: string;
   canEditSelfAssessment?: boolean;
+  canEditManagerAssessment?: boolean; // Nowe pole dla uprawnień kierownika
   employee?: {
     id: string;
     name: string;
@@ -51,6 +59,9 @@ export interface UseGoalsResult {
   canEditSelfAssessment?: boolean;
   saveSelfAssessment?: (goalId: string, rating: number, comment: string) => Promise<void>;
   isSaving?: Record<string, boolean>; // Stan zapisywania dla każdego celu
+  canEditManagerAssessment?: boolean; // Nowe pole dla uprawnień kierownika
+  saveManagerAssessment?: (goalId: string, rating: number, comment: string) => Promise<void>; // Nowa funkcja dla zapisywania oceny kierownika
+  isSavingManagerAssessment?: Record<string, boolean>; // Stan zapisywania oceny kierownika dla każdego celu
   employee?: {
     id: string;
     name: string;
@@ -67,6 +78,9 @@ export interface GoalsListProps {
   canEditSelfAssessment?: boolean;
   saveSelfAssessment?: (goalId: string, rating: number, comment: string) => Promise<void>;
   isSaving?: Record<string, boolean>;
+  canEditManagerAssessment?: boolean; // Nowe pole dla uprawnień kierownika
+  saveManagerAssessment?: (goalId: string, rating: number, comment: string) => Promise<void>; // Nowa funkcja dla zapisywania oceny kierownika
+  isSavingManagerAssessment?: Record<string, boolean>; // Stan zapisywania oceny kierownika dla każdego celu
   employee?: {
     id: string;
     name: string;
@@ -80,6 +94,9 @@ export interface GoalCardProps {
   canEditSelfAssessment?: boolean;
   saveSelfAssessment?: (goalId: string, rating: number, comment: string) => Promise<void>;
   isSaving?: boolean;
+  canEditManagerAssessment?: boolean; // Nowe pole dla uprawnień kierownika
+  saveManagerAssessment?: (goalId: string, rating: number, comment: string) => Promise<void>; // Nowa funkcja dla zapisywania oceny kierownika
+  isSavingManagerAssessment?: boolean; // Stan zapisywania oceny kierownika
 }
 
 // Props dla formularza samooceny
@@ -91,7 +108,22 @@ export interface SelfAssessmentFormProps {
   isSaving: boolean;
 }
 
+// Props dla formularza oceny kierownika
+export interface ManagerAssessmentFormProps {
+  goalId: string;
+  initialRating?: number;
+  initialComment?: string;
+  onSave: (goalId: string, rating: number, comment: string) => Promise<void>;
+  isSaving: boolean;
+  canEdit: boolean; // Dodatkowy prop informujący czy kierownik może edytować ocenę
+}
+
 export interface SelfAssessmentDTO {
+  rating: number;
+  comment: string;
+}
+
+export interface ManagerAssessmentDTO {
   rating: number;
   comment: string;
 }

@@ -1,6 +1,7 @@
 import { ProcessStepper } from "../dashboard/ProcessStepper";
 import { GoalsList } from "./GoalsList";
 import { useGoals } from "./hooks/useGoals";
+import { useManagerAssessment } from "./hooks/useManagerAssessment";
 import type { AssessmentProcessStatus, AssessmentProcessViewModel } from "@/types";
 import { useEffect, useState } from "react";
 import { Button } from "../ui/button";
@@ -48,20 +49,42 @@ export function GoalsViewPage({ processId, employeeId, process }: GoalsViewPageP
     }
   }, [employeeId]);
 
+  // Hook do zarządzania celami i samoocenami
   const {
     goals,
     totalWeight,
-    isLoading,
-    error,
-    reload,
+    isLoading: isLoadingGoals,
+    error: goalsError,
+    reload: reloadGoals,
     canEditSelfAssessment,
     saveSelfAssessment,
-    isSaving,
+    isSaving: isSavingSelfAssessment,
     employee,
+    processStatus,
   } = useGoals({
     processId,
     employeeId: localEmployeeId,
   });
+
+  // Hook do zarządzania ocenami kierownika
+  const {
+    assessments: managerAssessments,
+    isLoading: isLoadingManagerAssessments,
+    error: managerAssessmentsError,
+    saveManagerAssessment,
+    isSaving: isSavingManagerAssessment,
+    canEditManagerAssessment,
+    reload: reloadManagerAssessments,
+  } = useManagerAssessment({
+    processId,
+    employeeId: localEmployeeId,
+  });
+
+  // Funkcja do przeładowania wszystkich danych
+  const reload = () => {
+    reloadGoals();
+    reloadManagerAssessments();
+  };
 
   // Handler dla zmiany statusu procesu
   const handleStatusChange = async (newStatus: AssessmentProcessStatus) => {
@@ -117,15 +140,28 @@ export function GoalsViewPage({ processId, employeeId, process }: GoalsViewPageP
     }
   };
 
-  // Dla debugowania - wyświetl w konsoli czy samoocena jest dostępna
+  // Dla debugowania - wyświetl w konsoli informacje o stanie ocen
   useEffect(() => {
     // eslint-disable-next-line no-console
     console.log("canEditSelfAssessment:", canEditSelfAssessment);
     // eslint-disable-next-line no-console
     console.log("saveSelfAssessment available:", !!saveSelfAssessment);
     // eslint-disable-next-line no-console
+    console.log("canEditManagerAssessment:", canEditManagerAssessment);
+    // eslint-disable-next-line no-console
+    console.log("saveManagerAssessment available:", !!saveManagerAssessment);
+    // eslint-disable-next-line no-console
     console.log("employee:", employee);
-  }, [canEditSelfAssessment, saveSelfAssessment, employee]);
+    // eslint-disable-next-line no-console
+    console.log("managerAssessments:", managerAssessments);
+  }, [
+    canEditSelfAssessment,
+    saveSelfAssessment,
+    canEditManagerAssessment,
+    saveManagerAssessment,
+    employee,
+    managerAssessments,
+  ]);
 
   // Pokazuj komunikat tylko, gdy nie jesteśmy w trakcie ładowania i nie mamy ID pracownika
   if (!localEmployeeId && !isLoadingUser) {
@@ -144,6 +180,9 @@ export function GoalsViewPage({ processId, employeeId, process }: GoalsViewPageP
     );
   }
 
+  // Połącz błędy z obu hooków
+  const error = goalsError || managerAssessmentsError;
+
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center p-8">
@@ -158,7 +197,23 @@ export function GoalsViewPage({ processId, employeeId, process }: GoalsViewPageP
     );
   }
 
-  const fullIsLoading = isLoading || isLoadingUser || isUpdatingStatus;
+  // Łączymy stany ładowania
+  const fullIsLoading = isLoadingGoals || isLoadingUser || isUpdatingStatus || isLoadingManagerAssessments;
+
+  // Mapuj oceny kierownika na modele widoków celów
+  const goalsWithManagerAssessments = goals.map((goal) => {
+    const managerAssessment = managerAssessments[goal.id];
+    if (managerAssessment) {
+      return {
+        ...goal,
+        managerAssessment: {
+          rating: managerAssessment.rating,
+          comment: managerAssessment.comment || "",
+        },
+      };
+    }
+    return goal;
+  });
 
   return (
     <div className="container mx-auto px-4 py-6">
@@ -199,13 +254,16 @@ export function GoalsViewPage({ processId, employeeId, process }: GoalsViewPageP
 
       <div className="mt-4">
         <GoalsList
-          goals={goals}
+          goals={goalsWithManagerAssessments}
           totalWeight={totalWeight}
           isLoading={fullIsLoading}
+          processStatus={processStatus}
           canEditSelfAssessment={canEditSelfAssessment}
           saveSelfAssessment={saveSelfAssessment}
-          isSaving={isSaving}
-          employee={employee || undefined}
+          isSaving={isSavingSelfAssessment}
+          canEditManagerAssessment={canEditManagerAssessment}
+          saveManagerAssessment={saveManagerAssessment}
+          isSavingManagerAssessment={isSavingManagerAssessment}
         />
       </div>
     </div>

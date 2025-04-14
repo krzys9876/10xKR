@@ -6,9 +6,13 @@ export function GoalsList({
   goals,
   totalWeight,
   isLoading,
+  processStatus,
   canEditSelfAssessment,
   saveSelfAssessment,
   isSaving,
+  canEditManagerAssessment,
+  saveManagerAssessment,
+  isSavingManagerAssessment,
 }: GoalsListProps) {
   if (isLoading) {
     return (
@@ -46,14 +50,24 @@ export function GoalsList({
         </div>
       )}
 
+      {canEditManagerAssessment && (
+        <div className="p-4 bg-amber-50 text-amber-700 rounded-md mb-4">
+          <p>Proces jest obecnie w etapie oceny kierownika. Możesz wprowadzić ocenę kierownika dla każdego celu.</p>
+        </div>
+      )}
+
       <div className="space-y-4">
         {goals.map((goal) => (
           <GoalCard
             key={goal.id}
             goal={goal}
+            processStatus={processStatus}
             canEditSelfAssessment={canEditSelfAssessment}
             saveSelfAssessment={saveSelfAssessment}
             isSaving={isSaving?.[goal.id]}
+            canEditManagerAssessment={canEditManagerAssessment}
+            saveManagerAssessment={saveManagerAssessment}
+            isSavingManagerAssessment={isSavingManagerAssessment?.[goal.id]}
           />
         ))}
       </div>
