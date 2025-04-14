@@ -11,16 +11,25 @@ interface GoalWithSelfAssessmentDTO extends GoalDTO {
   };
 }
 
-export function useGoals({ processId, employeeId }: UseGoalsProps): UseGoalsResult {
+export function useGoals({ processId, employeeId, process }: UseGoalsProps): UseGoalsResult {
   const [goals, setGoals] = useState<GoalViewModel[]>([]);
   const [totalWeight, setTotalWeight] = useState<number>(0);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [processStatus, setProcessStatus] = useState<AssessmentProcessStatus>("in_self_assessment"); // Default to in_self_assessment for testing
+  const [processStatus, setProcessStatus] = useState<AssessmentProcessStatus>(
+    (process?.status as AssessmentProcessStatus) || "in_definition"
+  );
   const [isSaving, setIsSaving] = useState<Record<string, boolean>>({});
   const [employee, setEmployee] = useState<EmployeeDTO | null>(null);
   const [, setCurrentUser] = useState<EmployeeDTO | null>(null);
   const [isViewingOwnGoals, setIsViewingOwnGoals] = useState<boolean>(true);
+
+  // Aktualizuj status procesu, gdy zmienia się props
+  useEffect(() => {
+    if (process?.status) {
+      setProcessStatus(process.status as AssessmentProcessStatus);
+    }
+  }, [process?.status]);
 
   // Czy można edytować samoocenę (tylko dla statusu "in_self_assessment" i tylko gdy użytkownik przegląda własne cele)
   const canEditSelfAssessment = processStatus === "in_self_assessment" && isViewingOwnGoals;
@@ -193,18 +202,11 @@ export function useGoals({ processId, employeeId }: UseGoalsProps): UseGoalsResu
 
       const data = await response.json();
 
-      // Pobierz status procesu z odpowiedzi
-      const apiStatus = data.processStatus || "in_self_assessment"; // Dla testów ustawiamy in_self_assessment
-      setProcessStatus(apiStatus);
-
-      // eslint-disable-next-line no-console
-      console.log("API status:", apiStatus, "canEdit:", apiStatus === "in_self_assessment");
-
       // Transformacja DTO na ViewModel (bez samoocen)
       const goalsViewModel = data.goals.map((goal: GoalDTO) => ({
         ...goal,
         formattedWeight: `${goal.weight}%`,
-        isReadOnly: apiStatus !== "in_self_assessment", // Edycja tylko dla statusu in_self_assessment
+        isReadOnly: processStatus !== "in_self_assessment", // Edycja tylko dla statusu in_self_assessment
       }));
 
       setGoals(goalsViewModel);
@@ -257,100 +259,22 @@ export function useGoals({ processId, employeeId }: UseGoalsProps): UseGoalsResu
 
       setGoals(goalsViewModel);
       setTotalWeight(mockGoalsResponse.totalWeight);
+
+      // Log dla debugowania
+      // eslint-disable-next-line no-console
+      console.log("Mock status:", mockStatus, "canEdit:", mockStatus === "in_self_assessment");
+      // eslint-disable-next-line no-console
+      console.log("Mock goals:", goalsViewModel);
     } finally {
       setIsLoading(false);
     }
-  }, [processId, employeeId]);
+  }, [processId, employeeId, processStatus]);
 
-  // Funkcja do zapisywania samooceny
-  const saveSelfAssessment = useCallback(
-    async (goalId: string, rating: number, comment: string) => {
-      // Tylko dla statusu "in_self_assessment" i tylko dla własnych celów
-      if (!canEditSelfAssessment) {
-        return;
-      }
-
-      // Ustaw stan zapisywania dla tego celu
-      setIsSaving((prev) => ({ ...prev, [goalId]: true }));
-
-      try {
-        // Wywołanie API
-        const response = await fetch(`/api/goals/${goalId}/self-assessment`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ rating, comments: comment }), // Używamy "comments" zamiast "comment"
-        });
-
-        // Jeśli API zwraca błąd, wyświetlamy komunikat i używamy danych lokalnych
-        if (!response.ok) {
-          // eslint-disable-next-line no-console
-          console.warn("API zwróciło błąd podczas zapisywania samooceny. Aktualizuję tylko stan lokalny.");
-
-          // Aktualizacja stanu lokalnego
-          setGoals((prevGoals) =>
-            prevGoals.map((goal) =>
-              goal.id === goalId
-                ? {
-                    ...goal,
-                    selfAssessment: {
-                      rating,
-                      comment,
-                      error: "Błąd zapisywania oceny (dane testowe)",
-                    },
-                  }
-                : goal
-            )
-          );
-          return;
-        }
-
-        // Aktualizacja lokalnego stanu po pomyślnym zapisie
-        setGoals((prevGoals) =>
-          prevGoals.map((goal) =>
-            goal.id === goalId
-              ? {
-                  ...goal,
-                  selfAssessment: {
-                    rating,
-                    comment,
-                  },
-                }
-              : goal
-          )
-        );
-      } catch (err) {
-        // eslint-disable-next-line no-console
-        console.error("Błąd zapisywania samooceny:", err);
-
-        // Aktualizacja stanu z błędem
-        setGoals((prevGoals) =>
-          prevGoals.map((goal) =>
-            goal.id === goalId
-              ? {
-                  ...goal,
-                  selfAssessment: {
-                    ...goal.selfAssessment,
-                    rating,
-                    comment,
-                    error: "Błąd zapisywania oceny",
-                  },
-                }
-              : goal
-          )
-        );
-      } finally {
-        setIsSaving((prev) => ({ ...prev, [goalId]: false }));
-      }
-    },
-    [canEditSelfAssessment]
-  );
-
-  // Załadowanie celów przy montowaniu komponentu
   useEffect(() => {
-    reload();
-  }, [reload]);
+    if (processId && employeeId) {
+      reload();
+    }
+  }, [processId, employeeId, reload]);
 
   return {
     goals,
@@ -358,11 +282,54 @@ export function useGoals({ processId, employeeId }: UseGoalsProps): UseGoalsResu
     isLoading,
     error,
     reload,
-    isComplete: totalWeight === 100,
-    processStatus,
     canEditSelfAssessment,
-    saveSelfAssessment,
+    saveSelfAssessment: async (goalId: string, rating: number, comment: string) => {
+      try {
+        setIsSaving((prev) => ({ ...prev, [goalId]: true }));
+
+        const response = await fetch(`/api/goals/${goalId}/self-assessment`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            rating,
+            comments: comment || null,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`Błąd zapisywania samooceny: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+
+        // Aktualizuj stan z nową samooceną
+        setGoals((prev) =>
+          prev.map((goal) =>
+            goal.id === goalId
+              ? {
+                  ...goal,
+                  selfAssessment: {
+                    rating: data.rating,
+                    comment: data.comments || "",
+                  },
+                }
+              : goal
+          )
+        );
+
+        return data;
+      } catch (error) {
+        // eslint-disable-next-line no-console
+        console.error("Błąd zapisywania samooceny:", error);
+        throw error;
+      } finally {
+        setIsSaving((prev) => ({ ...prev, [goalId]: false }));
+      }
+    },
     isSaving,
-    employee: employee ?? undefined,
+    employee,
+    processStatus,
   };
 }

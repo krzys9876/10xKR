@@ -64,6 +64,7 @@ export function GoalsViewPage({ processId, employeeId, process }: GoalsViewPageP
   } = useGoals({
     processId,
     employeeId: localEmployeeId,
+    process,
   });
 
   // Hook do zarządzania ocenami kierownika

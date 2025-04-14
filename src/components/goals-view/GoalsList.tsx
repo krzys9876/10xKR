@@ -34,6 +34,26 @@ export function GoalsList({
     );
   }
 
+  // Sprawdź, czy wszystkie cele mają samoocenę
+  const allGoalsHaveSelfAssessment = goals.every((goal) => goal.selfAssessment);
+
+  // Określ, który komunikat powinien być wyświetlany
+  let messageToShow = null;
+
+  if (processStatus === "in_self_assessment" && canEditSelfAssessment && !allGoalsHaveSelfAssessment) {
+    messageToShow = (
+      <div className="p-4 bg-blue-50 text-blue-700 rounded-md mb-4">
+        <p>Proces jest obecnie w etapie samooceny. Możesz wprowadzić samoocenę dla każdego celu.</p>
+      </div>
+    );
+  } else if (processStatus === "awaiting_manager_assessment" && canEditManagerAssessment) {
+    messageToShow = (
+      <div className="p-4 bg-amber-50 text-amber-700 rounded-md mb-4">
+        <p>Proces jest obecnie w etapie oceny kierownika. Możesz wprowadzić ocenę kierownika dla każdego celu.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center pb-2 border-b">
@@ -44,17 +64,7 @@ export function GoalsList({
         </div>
       </div>
 
-      {canEditSelfAssessment && (
-        <div className="p-4 bg-blue-50 text-blue-700 rounded-md mb-4">
-          <p>Proces jest obecnie w etapie samooceny. Możesz wprowadzić samoocenę dla każdego celu.</p>
-        </div>
-      )}
-
-      {canEditManagerAssessment && (
-        <div className="p-4 bg-amber-50 text-amber-700 rounded-md mb-4">
-          <p>Proces jest obecnie w etapie oceny kierownika. Możesz wprowadzić ocenę kierownika dla każdego celu.</p>
-        </div>
-      )}
+      {messageToShow}
 
       <div className="space-y-4">
         {goals.map((goal) => (

@@ -45,6 +45,10 @@ export interface GoalsListViewModel {
 export interface UseGoalsProps {
   processId: string;
   employeeId: string;
+  process?: {
+    id: string;
+    status: string;
+  };
 }
 
 // Hook returns
@@ -53,20 +57,12 @@ export interface UseGoalsResult {
   totalWeight: number;
   isLoading: boolean;
   error: string | null;
-  reload: () => void; // Nazwa zgodna z konwencją istniejących hooków
-  isComplete: boolean;
-  processStatus?: string;
-  canEditSelfAssessment?: boolean;
-  saveSelfAssessment?: (goalId: string, rating: number, comment: string) => Promise<void>;
-  isSaving?: Record<string, boolean>; // Stan zapisywania dla każdego celu
-  canEditManagerAssessment?: boolean; // Nowe pole dla uprawnień kierownika
-  saveManagerAssessment?: (goalId: string, rating: number, comment: string) => Promise<void>; // Nowa funkcja dla zapisywania oceny kierownika
-  isSavingManagerAssessment?: Record<string, boolean>; // Stan zapisywania oceny kierownika dla każdego celu
-  employee?: {
-    id: string;
-    name: string;
-    email: string;
-  }; // Informacje o pracowniku
+  reload: () => void;
+  canEditSelfAssessment: boolean;
+  saveSelfAssessment: (goalId: string, rating: number, comment: string) => Promise<void>;
+  isSaving: Record<string, boolean>;
+  employee: EmployeeDTO | null;
+  processStatus: string;
 }
 
 // Props dla komponentów
@@ -126,4 +122,10 @@ export interface SelfAssessmentDTO {
 export interface ManagerAssessmentDTO {
   rating: number;
   comment: string;
+}
+
+export interface EmployeeDTO {
+  id: string;
+  name: string;
+  email: string;
 }
