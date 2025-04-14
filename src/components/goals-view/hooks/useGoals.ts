@@ -19,7 +19,7 @@ export function useGoals({ processId, employeeId }: UseGoalsProps): UseGoalsResu
   const [processStatus, setProcessStatus] = useState<AssessmentProcessStatus>("in_self_assessment"); // Default to in_self_assessment for testing
   const [isSaving, setIsSaving] = useState<Record<string, boolean>>({});
   const [employee, setEmployee] = useState<EmployeeDTO | null>(null);
-  const [currentUser, setCurrentUser] = useState<EmployeeDTO | null>(null);
+  const [, setCurrentUser] = useState<EmployeeDTO | null>(null);
   const [isViewingOwnGoals, setIsViewingOwnGoals] = useState<boolean>(true);
 
   // Czy można edytować samoocenę (tylko dla statusu "in_self_assessment" i tylko gdy użytkownik przegląda własne cele)
