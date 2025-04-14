@@ -106,6 +106,7 @@ export function GoalForm({
       }
     } catch (err) {
       // Error is handled by the parent component
+      // eslint-disable-next-line no-console
       console.error("Error saving goal:", err);
     }
   };

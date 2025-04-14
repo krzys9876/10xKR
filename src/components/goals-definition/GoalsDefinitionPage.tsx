@@ -1,6 +1,5 @@
 import React from "react";
 import { useGoalsDefinition } from "./hooks/useGoalsDefinition";
-import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import type { GoalsDefinitionPageProps, GoalViewModel } from "./types";
 import { GoalsList } from "@/components/goals-definition/GoalsList";
@@ -9,6 +8,7 @@ import { GoalForm } from "@/components/goals-definition/GoalForm";
 export function GoalsDefinitionPage({ processId, employeeId, process, employee }: GoalsDefinitionPageProps) {
   // Process prop is used for passing to child components that may need it
   // or for displaying process-specific information if needed in the future
+  // eslint-disable-next-line no-console
   console.log("Process data:", process?.name);
 
   const {
@@ -17,15 +17,11 @@ export function GoalsDefinitionPage({ processId, employeeId, process, employee }
     isLoading,
     error,
     categories,
-    isComplete,
-    isManager,
     addGoal,
     updateGoal,
     deleteGoal,
-    updateProcessStatus,
     isSaving,
     isDeletingGoal,
-    isUpdatingStatus,
   } = useGoalsDefinition({ processId, employeeId });
 
   const [editingGoal, setEditingGoal] = React.useState<{
@@ -78,14 +74,8 @@ export function GoalsDefinitionPage({ processId, employeeId, process, employee }
       }
       setEditingGoal(null);
     } catch (err) {
+      // eslint-disable-next-line no-console
       console.error("Failed to save goal:", err);
-    }
-  };
-
-  // Handler for changing process status to self-assessment
-  const handleStartSelfAssessment = async () => {
-    if (isComplete) {
-      await updateProcessStatus("in_self_assessment");
     }
   };
 
@@ -146,15 +136,6 @@ export function GoalsDefinitionPage({ processId, employeeId, process, employee }
         onDeleteGoal={deleteGoal}
         isDeletingGoal={isDeletingGoal}
       />
-
-      {/* Action button to move to next step */}
-      {isManager && (
-        <div className="mt-6 flex justify-end">
-          <Button onClick={handleStartSelfAssessment} disabled={!isComplete || isUpdatingStatus} className="ml-auto">
-            {isUpdatingStatus ? "Zmiana statusu..." : "Przejdź do samooceny"}
-          </Button>
-        </div>
-      )}
     </div>
   );
 }
