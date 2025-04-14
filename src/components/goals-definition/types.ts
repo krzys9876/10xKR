@@ -56,6 +56,7 @@ export interface GoalCardProps {
 export interface GoalFormProps {
   initialValues: {
     id?: string;
+    title?: string;
     description: string;
     categoryId: string;
     weight: number;
@@ -63,7 +64,13 @@ export interface GoalFormProps {
   categories: GoalCategoryDTO[];
   totalWeight: number;
   currentGoalWeight: number; // Current weight in case of edit
-  onSave: (goal: { description: string; categoryId: string; weight: number; id?: string }) => Promise<void>;
+  onSave: (goal: {
+    description: string;
+    categoryId: string;
+    weight: number;
+    id?: string;
+    title: string;
+  }) => Promise<void>;
   onCancel: () => void;
   isSaving: boolean;
 }

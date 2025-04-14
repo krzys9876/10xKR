@@ -150,12 +150,14 @@ export interface GoalListResponse {
 
 // Goal Command Models
 export interface CreateGoalCommand {
+  title: string;
   description: string;
   weight: number;
   categoryId: string;
 }
 
 export interface UpdateGoalCommand {
+  title: string;
   description: string;
   weight: number;
   categoryId: string;

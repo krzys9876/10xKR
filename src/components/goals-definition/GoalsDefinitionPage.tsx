@@ -30,6 +30,7 @@ export function GoalsDefinitionPage({ processId, employeeId, process, employee }
 
   const [editingGoal, setEditingGoal] = React.useState<{
     id?: string;
+    title: string;
     description: string;
     categoryId: string;
     weight: number;
@@ -39,6 +40,7 @@ export function GoalsDefinitionPage({ processId, employeeId, process, employee }
   const handleEditGoal = (goal: GoalViewModel) => {
     setEditingGoal({
       id: goal.id,
+      title: goal.title,
       description: goal.description,
       categoryId: goal.category.id,
       weight: goal.weight,
@@ -51,16 +53,24 @@ export function GoalsDefinitionPage({ processId, employeeId, process, employee }
   };
 
   // Handler for saving a goal (new or edited)
-  const handleSaveGoal = async (goalData: { description: string; categoryId: string; weight: number; id?: string }) => {
+  const handleSaveGoal = async (goalData: {
+    description: string;
+    categoryId: string;
+    weight: number;
+    id?: string;
+    title: string;
+  }) => {
     try {
       if (goalData.id) {
         await updateGoal(goalData.id, {
+          title: goalData.title,
           description: goalData.description,
           categoryId: goalData.categoryId,
           weight: goalData.weight,
         });
       } else {
         await addGoal({
+          title: goalData.title,
           description: goalData.description,
           categoryId: goalData.categoryId,
           weight: goalData.weight,
@@ -109,6 +119,7 @@ export function GoalsDefinitionPage({ processId, employeeId, process, employee }
         <GoalForm
           initialValues={
             editingGoal || {
+              title: "",
               description: "",
               categoryId: categories?.[0]?.id || "",
               weight: 0,

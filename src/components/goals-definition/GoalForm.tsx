@@ -15,15 +15,21 @@ export function GoalForm({
   onCancel,
   isSaving,
 }: GoalFormProps) {
+  const [title, setTitle] = useState(initialValues.title || "");
   const [description, setDescription] = useState(initialValues.description);
   const [categoryId, setCategoryId] = useState(initialValues.categoryId);
   const [weight, setWeight] = useState(initialValues.weight);
-  const [errors, setErrors] = useState<{ description?: string; categoryId?: string; weight?: string; form?: string }>(
-    {}
-  );
+  const [errors, setErrors] = useState<{
+    title?: string;
+    description?: string;
+    categoryId?: string;
+    weight?: string;
+    form?: string;
+  }>({});
 
   // Reset form when initialValues change
   useEffect(() => {
+    setTitle(initialValues.title || "");
     setDescription(initialValues.description);
     setCategoryId(initialValues.categoryId);
     setWeight(initialValues.weight);
@@ -41,8 +47,14 @@ export function GoalForm({
   const maxWeight = calculateMaxWeight();
 
   const validateForm = () => {
-    const newErrors: { description?: string; categoryId?: string; weight?: string; form?: string } = {};
+    const newErrors: { title?: string; description?: string; categoryId?: string; weight?: string; form?: string } = {};
     let isValid = true;
+
+    // Validate title
+    if (!title.trim()) {
+      newErrors.title = "Tytuł celu jest wymagany";
+      isValid = false;
+    }
 
     // Validate description
     if (!description.trim()) {
@@ -79,6 +91,7 @@ export function GoalForm({
     try {
       await onSave({
         id: initialValues.id,
+        title,
         description,
         categoryId,
         weight,
@@ -86,6 +99,7 @@ export function GoalForm({
 
       // Reset form after success (only for new goals)
       if (!initialValues.id) {
+        setTitle("");
         setDescription("");
         setWeight(0);
         // Keep the selected category for convenience
@@ -103,6 +117,19 @@ export function GoalForm({
           <AlertDescription>{errors.form}</AlertDescription>
         </Alert>
       )}
+
+      <div className="space-y-2">
+        <Label htmlFor="title">Tytuł celu</Label>
+        <Input
+          id="title"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="Wprowadź tytuł celu"
+          className={errors.title ? "border-destructive" : ""}
+          disabled={isSaving}
+        />
+        {errors.title && <p className="text-sm text-destructive">{errors.title}</p>}
+      </div>
 
       <div className="space-y-2">
         <Label htmlFor="description">Opis celu</Label>
