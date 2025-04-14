@@ -39,10 +39,9 @@ export const GET: APIRoute = async ({ locals }) => {
       .eq("id", userId)
       .single();
 
-    // eslint-disable-next-line no-console
-    console.log("found:", userData);
-    // eslint-disable-next-line no-console
-    console.log("error:", profileError);
+    // console.log("found:", userData);
+
+    // console.log("error:", profileError);
 
     if (profileError || !userData) {
       return new Response(

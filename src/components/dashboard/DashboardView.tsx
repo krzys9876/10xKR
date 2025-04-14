@@ -346,6 +346,16 @@ export function DashboardView() {
               >
                 Przeglądaj cele
               </a>
+
+              {/* Dodajemy przycisk do definiowania celów */}
+              {isManager && selectedProcess.status === "in_definition" && selectedEmployee && (
+                <a
+                  href={`/process/${selectedProcess.id}/employee/${selectedEmployee.id}/goals-definition`}
+                  className="px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors text-sm"
+                >
+                  Definiuj cele
+                </a>
+              )}
             </div>
           </div>
           <ProcessStepper

@@ -1,0 +1,131 @@
+---
+import { GoalsDefinitionPage } from "@/components/goals-definition/GoalsDefinitionPage";
+import DashboardLayout from "@/layouts/DashboardLayout.astro";
+import { STATUS_LABELS, type AssessmentProcessStatus } from "@/types";
+
+// Pobieranie parametrów z URL
+const { processId, employeeId } = Astro.params;
+
+// Sprawdzenie czy parametry istnieją
+if (!processId || !employeeId) {
+  return Astro.redirect("/dashboard");
+}
+
+// Helper function to create absolute URLs
+const createApiUrl = (path: string) => {
+  const origin = Astro.url.origin;
+  return new URL(path, origin).toString();
+};
+
+// Zmienne do przechowywania danych z API
+let process;
+let employee;
+let error = null;
+
+try {
+  // Pobieranie informacji o zalogowanym użytkowniku
+  const userResponse = await fetch(createApiUrl(`/api/auth/me`), {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      Cookie: Astro.request.headers.get("cookie") || "",
+    },
+    credentials: "include",
+  });
+
+  if (!userResponse.ok) {
+    return Astro.redirect("/login");
+  }
+
+  // Pobieranie informacji o procesie
+  const processResponse = await fetch(createApiUrl(`/api/assessment-processes/${processId}`), {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      Cookie: Astro.request.headers.get("cookie") || "",
+    },
+    credentials: "include",
+  });
+
+  if (!processResponse.ok) {
+    throw new Error("Nie udało się pobrać informacji o procesie");
+  }
+
+  const processData = await processResponse.json();
+
+  // Sprawdzenie, czy proces jest w statusie definiowania
+  if (processData.status !== "in_definition") {
+    return Astro.redirect(`/process/${processId}/goals-view?employeeId=${employeeId}`);
+  }
+
+  // Formatowanie danych procesu dla komponentu
+  const startDate = new Date(processData.startDate);
+  const endDate = new Date(processData.endDate);
+
+  process = {
+    ...processData,
+    statusLabel: STATUS_LABELS[processData.status as AssessmentProcessStatus],
+    formattedStartDate: startDate.toLocaleDateString("pl-PL"),
+    formattedEndDate: endDate.toLocaleDateString("pl-PL"),
+  };
+
+  // Pobieranie informacji o pracowniku
+  const employeeResponse = await fetch(createApiUrl(`/api/users/${employeeId}`), {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      Cookie: Astro.request.headers.get("cookie") || "",
+    },
+    credentials: "include",
+  });
+
+  if (!employeeResponse.ok) {
+    throw new Error("Nie udało się pobrać informacji o pracowniku");
+  }
+
+  employee = await employeeResponse.json();
+} catch (err) {
+  error = err instanceof Error ? err.message : "Wystąpił nieoczekiwany błąd";
+  console.error("Error fetching data:", error);
+}
+---
+
+<DashboardLayout title="Definiowanie celów pracownika">
+  <div class="container mx-auto py-6">
+    <div class="mb-6 flex items-center justify-between">
+      <h1 class="text-2xl font-bold">Definiowanie celów pracownika</h1>
+      <a href="/dashboard" class="text-blue-600 hover:text-blue-800 flex items-center">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+          <path
+            fill-rule="evenodd"
+            d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z"
+            clip-rule="evenodd"></path>
+        </svg>
+        Powrót do strony głównej
+      </a>
+    </div>
+
+    {
+      error ? (
+        <div class="p-4 bg-red-50 border border-red-200 rounded-md text-red-700 mb-6">
+          <p class="font-semibold">Błąd:</p>
+          <p>{error}</p>
+          <a href="/dashboard" class="inline-block mt-2 text-blue-600 hover:underline">
+            Wróć do dashboardu
+          </a>
+        </div>
+      ) : (
+        <GoalsDefinitionPage
+          processId={processId}
+          employeeId={employeeId}
+          process={process}
+          employee={employee}
+          client:load
+        />
+      )
+    }
+  </div>
+</DashboardLayout>
