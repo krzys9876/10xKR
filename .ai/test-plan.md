@@ -120,12 +120,12 @@ Niniejszy plan testów został opracowany dla aplikacji "System Oceny Celów" - 
    - Oczekiwany rezultat: Ocena kierownika zostaje zapisana
 
 2. **Scenariusz**: Przejście procesu do statusu "completed"
-   - Kroki: Zakończenie oceniania wszystkich celów pracownika, zmiana statusu
+   - Kroki: Zmiana statusu
    - Oczekiwany rezultat: Status procesu zmienia się na "completed"
 
 ### 4.6. Zarządzanie procesem oceny
 1. **Scenariusz**: Zmiana statusu procesu
-   - Kroki: Wybór procesu, zmiana statusu, zapisanie
+   - Kroki: Wybór procesu, zmiana statusu
    - Oczekiwany rezultat: Status procesu zostaje zaktualizowany
 
 2. **Scenariusz**: Weryfikacja przepływu procesu
@@ -135,7 +135,7 @@ Niniejszy plan testów został opracowany dla aplikacji "System Oceny Celów" - 
 ## 5. Środowisko testowe
 
 ### 5.1. Środowisko deweloperskie
-- Lokalna instalacja aplikacji z wykorzystaniem lokalnej instancji Supabase
+- Lokalna instalacja aplikacji z wykorzystaniem testowej instancji Supabase
 - Node.js v18 lub nowszy
 - Astro 5
 - React 19
