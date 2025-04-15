@@ -1,7 +1,7 @@
 import { renderHook, waitFor, act } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { useGoalsDefinition } from "@/components/goals-definition/hooks/useGoalsDefinition";
-import type { GoalDTO, GoalCategoryDTO, EmployeeDTO, CreateGoalCommand } from "@/types";
+import type { GoalDTO, GoalCategoryDTO, EmployeeDTO, CreateGoalCommand, UpdateGoalCommand } from "@/types";
 
 // Mockujemy globalny fetch zamiast API, ponieważ hook definiuje swoje API wewnętrznie
 const originalFetch = global.fetch;
@@ -423,5 +423,137 @@ describe("useGoalsDefinition", () => {
 
     // Sprawdź brak błędów - hook nie powinien rzucać błędów przy przekroczeniu 100%
     expect(result.current.error).toBeNull();
+  });
+
+  // Test 4: Aktualizacja celu
+  it("powinien zaktualizować istniejący cel i poprawnie przeliczyć sumy wag", async () => {
+    const { result } = renderHook(() => useGoalsDefinition({ processId, employeeId }));
+
+    // Poczekaj na zakończenie ładowania
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    // Sprawdź stan początkowy
+    expect(result.current.goals.length).toBe(2);
+    expect(result.current.totalWeight).toBe(70);
+
+    // Identyfikator celu do aktualizacji (cel 1 o wadze 40%)
+    const goalIdToUpdate = "goal-1";
+
+    // Sprawdź czy cel istnieje przed aktualizacją
+    const originalGoal = result.current.goals.find((g) => g.id === goalIdToUpdate);
+    expect(originalGoal).toBeDefined();
+    expect(originalGoal?.weight).toBe(40);
+
+    // Dane do aktualizacji - zwiększamy wagę z 40% na 50%
+    const goalToUpdate: UpdateGoalCommand = {
+      title: "Zaktualizowany cel",
+      description: "Nowy opis celu",
+      categoryId: "cat-2", // Zmieniamy kategorię z Technicznej na Biznesową
+      weight: 50,
+    };
+
+    // Mock dla aktualizacji celu
+    global.fetch = vi.fn().mockImplementation((url: RequestInfo | URL, options?: RequestInit) => {
+      if (typeof url !== "string") {
+        return Promise.resolve(new Response(JSON.stringify({ error: "Unsupported URL type" }), { status: 400 }));
+      }
+
+      // Obsługa inicjalnego ładowania danych
+      if (url.includes(`/api/assessment-processes/${processId}/employees/${employeeId}/goals`)) {
+        mockGoalsDefinitionApi.fetchGoals(processId, employeeId);
+        return Promise.resolve(
+          new Response(
+            JSON.stringify({
+              goals: mockGoals,
+              totalWeight: 70,
+            }),
+            {
+              status: 200,
+              headers: { "Content-Type": "application/json" },
+            }
+          )
+        );
+      }
+
+      // Obsługa aktualizacji celu
+      if (url.includes(`/api/goals/${goalIdToUpdate}`) && options?.method === "PUT") {
+        const goal = JSON.parse(options.body as string);
+        mockGoalsDefinitionApi.updateGoal(goalIdToUpdate, goal);
+
+        // Przygotuj zaktualizowany cel do zwrócenia
+        const updatedGoal = {
+          id: goalIdToUpdate,
+          title: goalToUpdate.title,
+          description: goalToUpdate.description,
+          weight: goalToUpdate.weight,
+          category: mockCategories.find((c) => c.id === goalToUpdate.categoryId) || mockCategories[0],
+        };
+
+        return Promise.resolve(
+          new Response(JSON.stringify(updatedGoal), {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          })
+        );
+      }
+
+      // Pozostałe endpointy jak w podstawowym mocku
+      if (url.includes(`/api/assessment-processes/${processId}`)) {
+        return Promise.resolve(
+          new Response(JSON.stringify({ status: "in_definition" }), {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          })
+        );
+      } else if (url.includes("/api/goal-categories")) {
+        mockGoalsDefinitionApi.fetchCategories();
+        return Promise.resolve(
+          new Response(JSON.stringify({ categories: mockCategories }), {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          })
+        );
+      } else if (url.includes(`/api/users/${employeeId}`)) {
+        mockGoalsDefinitionApi.fetchEmployee(employeeId);
+        return Promise.resolve(
+          new Response(JSON.stringify(mockEmployee), {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          })
+        );
+      }
+
+      return Promise.resolve(new Response(JSON.stringify({ error: "Not found" }), { status: 404 }));
+    });
+
+    // Zaktualizuj cel
+    await act(async () => {
+      await result.current.updateGoal(goalIdToUpdate, goalToUpdate);
+    });
+
+    // Sprawdź czy API updateGoal zostało wywołane
+    expect(mockGoalsDefinitionApi.updateGoal).toHaveBeenCalledWith(goalIdToUpdate, goalToUpdate);
+
+    // Sprawdź czy cel został zaktualizowany
+    const updatedGoal = result.current.goals.find((g) => g.id === goalIdToUpdate);
+    expect(updatedGoal).toBeDefined();
+    expect(updatedGoal?.title).toBe(goalToUpdate.title);
+    expect(updatedGoal?.description).toBe(goalToUpdate.description);
+    expect(updatedGoal?.weight).toBe(goalToUpdate.weight);
+    expect(updatedGoal?.category).toEqual(mockCategories[1]); // Biznesowa (cat-2)
+
+    // Sprawdź czy suma wag została zaktualizowana poprawnie
+    // Oryginalna waga celu-1 wynosiła 40%, nowa to 50%, więc różnica +10%
+    // Całkowita suma to 70% + 10% = 80%
+    expect(result.current.totalWeight).toBe(80);
+    expect(result.current.isComplete).toBe(false); // 80% != 100%
+
+    // Sprawdź czy liczba celów nie uległa zmianie
+    expect(result.current.goals.length).toBe(2);
+
+    // Sprawdź czy drugi cel pozostał bez zmian
+    const otherGoal = result.current.goals.find((g) => g.id === "goal-2");
+    expect(otherGoal).toBeDefined();
+    expect(otherGoal?.weight).toBe(30);
   });
 });

@@ -429,3 +429,13 @@ Prawidłowy 1 unit test
 @unit-tests-recommendations.md @useGoalsDefinition.test.ts 
 Znakomicie. Zaimplemetuj teraz test nr 2 w tym samym pliku useGoalsDEfinition.test.ts:
 Test 2: Dodawanie celu - przypadek normalny
+
+------------------------------------
+@unit-tests-recommendations.md @useGoalsDefinition.test.ts 
+Znakomicie. Zaimplemetuj teraz test nr 3 w tym samym pliku useGoalsDEfinition.test.ts:
+Test 3: Dodawanie celu przekraczającego 100%
+
+------------------------------------
+@unit-tests-recommendations.md @useGoalsDefinition.test.ts 
+Znakomicie. Zaimplemetuj teraz test nr 4 w tym samym pliku useGoalsDEfinition.test.ts:
+Test 4: Aktualizacja celu
