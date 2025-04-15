@@ -1,7 +1,7 @@
-import { renderHook, waitFor } from "@testing-library/react";
+import { renderHook, waitFor, act } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { useGoalsDefinition } from "@/components/goals-definition/hooks/useGoalsDefinition";
-import type { GoalDTO, GoalCategoryDTO, EmployeeDTO } from "@/types";
+import type { GoalDTO, GoalCategoryDTO, EmployeeDTO, CreateGoalCommand } from "@/types";
 
 // Mockujemy globalny fetch zamiast API, ponieważ hook definiuje swoje API wewnętrznie
 const originalFetch = global.fetch;
@@ -194,5 +194,234 @@ describe("useGoalsDefinition", () => {
     expect(result.current.employee).toEqual(mockEmployee);
     expect(result.current.isComplete).toBe(false); // 70% != 100%
     expect(result.current.processStatus).toBe("in_definition");
+  });
+
+  // Test 2: Dodawanie celu - przypadek normalny
+  it("powinien dodać nowy cel do listy i zaktualizować sumę wag", async () => {
+    const { result } = renderHook(() => useGoalsDefinition({ processId, employeeId }));
+
+    // Poczekaj na zakończenie ładowania
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    // Nowy cel do dodania
+    const newGoal: CreateGoalCommand = {
+      title: "Nowy cel",
+      description: "Opis nowego celu",
+      categoryId: "cat-3",
+      weight: 30,
+    };
+
+    // Mock dla dodawania celu
+    const mockNewGoalResult = {
+      id: "new-goal-id",
+      title: newGoal.title,
+      description: newGoal.description,
+      weight: newGoal.weight,
+      category: mockCategories.find((c) => c.id === newGoal.categoryId) || mockCategories[0],
+    };
+
+    // Zmień implementację mocka tylko dla tego testu
+    global.fetch = vi.fn().mockImplementation((url: RequestInfo | URL, options?: RequestInit) => {
+      if (typeof url !== "string") {
+        return Promise.resolve(new Response(JSON.stringify({ error: "Unsupported URL type" }), { status: 400 }));
+      }
+
+      if (url.includes(`/api/assessment-processes/${processId}/employees/${employeeId}/goals`)) {
+        // Obsługa dodawania nowego celu
+        if (options?.method === "POST") {
+          const goal = JSON.parse(options.body as string);
+          mockGoalsDefinitionApi.addGoal(processId, employeeId, goal);
+          return Promise.resolve(
+            new Response(JSON.stringify(mockNewGoalResult), {
+              status: 201,
+              headers: { "Content-Type": "application/json" },
+            })
+          );
+        }
+
+        // Pobieranie listy celów
+        mockGoalsDefinitionApi.fetchGoals(processId, employeeId);
+        return Promise.resolve(
+          new Response(
+            JSON.stringify({
+              goals: mockGoals,
+              totalWeight: 70,
+            }),
+            {
+              status: 200,
+              headers: { "Content-Type": "application/json" },
+            }
+          )
+        );
+      }
+
+      // Pozostałe endpointy jak w podstawowym mocku
+      if (url.includes(`/api/assessment-processes/${processId}`)) {
+        return Promise.resolve(
+          new Response(JSON.stringify({ status: "in_definition" }), {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          })
+        );
+      } else if (url.includes("/api/goal-categories")) {
+        mockGoalsDefinitionApi.fetchCategories();
+        return Promise.resolve(
+          new Response(JSON.stringify({ categories: mockCategories }), {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          })
+        );
+      } else if (url.includes(`/api/users/${employeeId}`)) {
+        mockGoalsDefinitionApi.fetchEmployee(employeeId);
+        return Promise.resolve(
+          new Response(JSON.stringify(mockEmployee), {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          })
+        );
+      }
+
+      return Promise.resolve(new Response(JSON.stringify({ error: "Not found" }), { status: 404 }));
+    });
+
+    // Dodaj cel
+    await act(async () => {
+      await result.current.addGoal(newGoal);
+    });
+
+    // Sprawdź czy cel został dodany
+    expect(mockGoalsDefinitionApi.addGoal).toHaveBeenCalledWith(processId, employeeId, newGoal);
+
+    // Sprawdź aktualizację stanu wewnętrznego
+    expect(result.current.goals.length).toBe(3); // 2 początkowe cele + 1 nowy
+
+    // Sprawdź nowy cel
+    const addedGoal = result.current.goals.find((g) => g.id === "new-goal-id");
+    expect(addedGoal).toBeDefined();
+    expect(addedGoal?.title).toBe(newGoal.title);
+    expect(addedGoal?.weight).toBe(newGoal.weight);
+    expect(addedGoal?.category).toEqual(mockCategories[2]); // kategoria "cat-3" (Miękkie)
+
+    // Sprawdź aktualizację sumy wag
+    expect(result.current.totalWeight).toBe(100); // 70% + 30% = 100%
+    expect(result.current.isComplete).toBe(true); // 100% = 100%
+  });
+
+  // Test 3: Dodawanie celu przekraczającego 100%
+  it("powinien poprawnie dodać cel przekraczający 100% wagi (bez walidacji w hooku)", async () => {
+    const { result } = renderHook(() => useGoalsDefinition({ processId, employeeId }));
+
+    // Poczekaj na zakończenie ładowania
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    // Nowy cel do dodania przekraczający 100%
+    const newGoal: CreateGoalCommand = {
+      title: "Cel przekraczający",
+      description: "Opis celu przekraczającego limit wag",
+      categoryId: "cat-2",
+      weight: 40,
+    };
+
+    // Mock dla dodawania celu przekraczającego limit
+    const mockNewGoalResult = {
+      id: "excess-goal-id",
+      title: newGoal.title,
+      description: newGoal.description,
+      weight: newGoal.weight,
+      category: mockCategories.find((c) => c.id === newGoal.categoryId) || mockCategories[0],
+    };
+
+    // Zmień implementację mocka tylko dla tego testu
+    global.fetch = vi.fn().mockImplementation((url: RequestInfo | URL, options?: RequestInit) => {
+      if (typeof url !== "string") {
+        return Promise.resolve(new Response(JSON.stringify({ error: "Unsupported URL type" }), { status: 400 }));
+      }
+
+      if (url.includes(`/api/assessment-processes/${processId}/employees/${employeeId}/goals`)) {
+        // Obsługa dodawania nowego celu
+        if (options?.method === "POST") {
+          const goal = JSON.parse(options.body as string);
+          mockGoalsDefinitionApi.addGoal(processId, employeeId, goal);
+          return Promise.resolve(
+            new Response(JSON.stringify(mockNewGoalResult), {
+              status: 201,
+              headers: { "Content-Type": "application/json" },
+            })
+          );
+        }
+
+        // Pobieranie listy celów
+        mockGoalsDefinitionApi.fetchGoals(processId, employeeId);
+        return Promise.resolve(
+          new Response(
+            JSON.stringify({
+              goals: mockGoals,
+              totalWeight: 70,
+            }),
+            {
+              status: 200,
+              headers: { "Content-Type": "application/json" },
+            }
+          )
+        );
+      }
+
+      // Pozostałe endpointy jak w podstawowym mocku
+      if (url.includes(`/api/assessment-processes/${processId}`)) {
+        return Promise.resolve(
+          new Response(JSON.stringify({ status: "in_definition" }), {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          })
+        );
+      } else if (url.includes("/api/goal-categories")) {
+        mockGoalsDefinitionApi.fetchCategories();
+        return Promise.resolve(
+          new Response(JSON.stringify({ categories: mockCategories }), {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          })
+        );
+      } else if (url.includes(`/api/users/${employeeId}`)) {
+        mockGoalsDefinitionApi.fetchEmployee(employeeId);
+        return Promise.resolve(
+          new Response(JSON.stringify(mockEmployee), {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          })
+        );
+      }
+
+      return Promise.resolve(new Response(JSON.stringify({ error: "Not found" }), { status: 404 }));
+    });
+
+    // Dodaj cel przekraczający limit 100%
+    await act(async () => {
+      await result.current.addGoal(newGoal);
+    });
+
+    // Sprawdź czy cel został dodany
+    expect(mockGoalsDefinitionApi.addGoal).toHaveBeenCalledWith(processId, employeeId, newGoal);
+
+    // Sprawdź aktualizację stanu wewnętrznego
+    expect(result.current.goals.length).toBe(3); // 2 początkowe cele + 1 nowy
+
+    // Sprawdź nowy cel
+    const addedGoal = result.current.goals.find((g) => g.id === "excess-goal-id");
+    expect(addedGoal).toBeDefined();
+    expect(addedGoal?.title).toBe(newGoal.title);
+    expect(addedGoal?.weight).toBe(newGoal.weight);
+    expect(addedGoal?.category).toEqual(mockCategories[1]); // kategoria "cat-2" (Biznesowe)
+
+    // Sprawdź aktualizację sumy wag - powinna przekroczyć 100%
+    expect(result.current.totalWeight).toBe(110); // 70% + 40% = 110%
+
+    // Ważne: sprawdź, że isComplete jest false mimo dodania celu
+    // Hook nie powinien blokować dodawania celów przekraczających 100%,
+    // ale powinien informować, że suma nie jest kompletna (do walidacji w UI)
+    expect(result.current.isComplete).toBe(false); // 110% != 100%
+
+    // Sprawdź brak błędów - hook nie powinien rzucać błędów przy przekroczeniu 100%
+    expect(result.current.error).toBeNull();
   });
 });

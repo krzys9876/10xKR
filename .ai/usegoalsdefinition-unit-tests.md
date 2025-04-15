@@ -415,3 +415,17 @@ Powyższe testy jednostkowe dla hooka `useGoalsDefinition` pokrywają następuj�
 10. **Przeładowanie danych** - sprawdzenie funkcji reload do odświeżania danych.
 
 Testy zostały zorganizowane zgodnie z wytycznymi Vitest, z wykorzystaniem podejścia AAA (Arrange-Act-Assert) oraz z prawidłowym mockowaniem zewnętrznych zależności. 
+
+------------------------------------
+Now incorporate these test into codebase.
+------------------------------------
+@useGoalsDefinition.test.ts 
+Skup się na pierwszym teście w pliku. Uruchom wyłącznie ten test i spróbuj doprowadzić do sytuacji, w której test skończy się prawidłowo.
+
+-----------------------------------
+Prawidłowy 1 unit test
+
+------------------------------------
+@unit-tests-recommendations.md @useGoalsDefinition.test.ts 
+Znakomicie. Zaimplemetuj teraz test nr 2 w tym samym pliku useGoalsDEfinition.test.ts:
+Test 2: Dodawanie celu - przypadek normalny
