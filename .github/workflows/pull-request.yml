@@ -5,7 +5,14 @@ on:
     branches: [ main ]
   push:
     branches: [ main ]
-    
+
+# Grant write permissions for issues and pull requests
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+
 jobs:
   lint:
     name: Lint Code
