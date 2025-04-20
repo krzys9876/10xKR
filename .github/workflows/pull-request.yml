@@ -55,6 +55,9 @@ jobs:
       - name: Install TypeScript
         run: npm install typescript@5 --legacy-peer-deps
       
+      - name: Install Vitest Coverage
+        run: npm install @vitest/coverage-v8 --legacy-peer-deps
+      
       - name: Run unit tests with coverage
         run: npm run test:coverage
       
