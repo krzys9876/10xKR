@@ -113,7 +113,7 @@ jobs:
     name: PR Status Comment
     needs: [unit-test]
     runs-on: ubuntu-latest
-    if: ${{ always() && needs.unit-test.result == 'success' }}
+    if: ${{ always() && needs.unit-test.result == 'success' && github.event_name == 'pull_request' }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
