@@ -9,6 +9,9 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // Load environment variables from .env.test
 dotenv.config({ path: path.resolve(__dirname, "../.env.test") });
 
+// Get the base URL from environment variables or use default
+const baseURL = process.env.TEST_BASE_URL || "http://localhost:3000";
+
 export default defineConfig({
   testDir: "./tests",
   fullyParallel: true,
@@ -17,7 +20,7 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   reporter: "html",
   use: {
-    baseURL: "http://localhost:4321",
+    baseURL,
     trace: "on-first-retry",
     screenshot: "only-on-failure",
   },
@@ -29,7 +32,7 @@ export default defineConfig({
   ],
   webServer: {
     command: "npm run dev:e2e",
-    url: "http://localhost:4321",
+    url: baseURL,
     reuseExistingServer: !process.env.CI,
     stdout: "pipe",
     stderr: "pipe",
