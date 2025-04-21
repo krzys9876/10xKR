@@ -12,7 +12,8 @@
     "format": "prettier --write .",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+	"dev:e2e": "npm run astro dev -- --mode test"
   },
   "dependencies": {
     "@astrojs/node": "^9.1.3",
