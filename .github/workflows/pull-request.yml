@@ -75,52 +75,52 @@ jobs:
           path: coverage/
           retention-days: 7
   
-  # e2e-test:
-  #   name: E2E Tests
-  #   needs: lint
-  #   runs-on: ubuntu-latest
-  #   environment: integration
-  #   env:
-  #     SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-  #     SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
-  #     OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
-  #   steps:
-  #     - name: Checkout code
-  #       uses: actions/checkout@v4
-  #     
-  #     - name: Setup git config
-  #       run: git config --global core.autocrlf input
-  #     
-  #     - name: Setup Node.js
-  #       uses: actions/setup-node@v4
-  #       with:
-  #         node-version: 23.9.0
-  #         cache: 'npm'
-  #     
-  #     - name: Install dependencies
-  #       run: npm install --legacy-peer-deps
-  #     
-  #     - name: Install TypeScript
-  #       run: npm install typescript@5 --legacy-peer-deps
-  #     
-  #     - name: Install Playwright browsers
-  #       run: npx playwright install --with-deps
-  #     
-  #     - name: Run E2E tests
-  #       run: npx playwright test --coverage
-  #     
-  #     - name: Upload E2E test coverage
-  #       uses: actions/upload-artifact@v4
-  #       with:
-  #         name: e2e-test-coverage
-  #         path: coverage-e2e/
-  #         retention-days: 7
+  e2e-test:
+    name: E2E Tests
+    needs: lint
+    runs-on: ubuntu-latest
+    environment: integration
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+      OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup git config
+        run: git config --global core.autocrlf input
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 23.9.0
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm install --legacy-peer-deps
+      
+      - name: Install TypeScript
+        run: npm install typescript@5 --legacy-peer-deps
+      
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+      
+      - name: Run E2E tests
+        run: npm run test:e2e
+      
+      - name: Upload E2E test artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
   
   status-comment:
     name: PR Status Comment
-    needs: [unit-test]
+    needs: [unit-test, e2e-test]
     runs-on: ubuntu-latest
-    if: ${{ always() && needs.unit-test.result == 'success' && github.event_name == 'pull_request' }}
+    if: ${{ always() && needs.unit-test.result == 'success' && needs.e2e-test.result == 'success' && github.event_name == 'pull_request' }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -141,6 +141,7 @@ jobs:
             // You would need to parse your coverage files here
             // This is a simplified example
             let unitCoverage = "Unit tests passed successfully!";
+            let e2eStatus = "E2E tests passed successfully!";
             
             try {
               if (fs.existsSync('./coverage/coverage-summary.json')) {
@@ -157,6 +158,7 @@ jobs:
             
             ### Coverage Summary
             - ${unitCoverage}
+            - ${e2eStatus}
             
             *Build completed at ${new Date().toISOString()}*
             `;
