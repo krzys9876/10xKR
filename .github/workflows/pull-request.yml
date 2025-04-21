@@ -88,6 +88,9 @@ jobs:
       E2E_USERNAME_ID: ${{ secrets.E2E_USERNAME_ID }}
       E2E_USERNAME: ${{ secrets.E2E_USERNAME }}
       E2E_PASSWORD: ${{ secrets.E2E_PASSWORD }}
+      E2E_MANAGER_NAME: ${{ secrets.E2E_MANAGER_NAME }}
+      E2E_EMPLOYEE1_NAME: ${{ secrets.E2E_EMPLOYEE1_NAME }}
+      E2E_EMPLOYEE2_NAME: ${{ secrets.E2E_EMPLOYEE2_NAME }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
